@@ -5,7 +5,7 @@ namespace App\Services\Processor;
 class ExtractorService
 {
     protected array $rules;
-    protected array $resolvedCache = [];
+    protected array $cache = [];
 
     public function __construct(array $rules)
     {
@@ -18,7 +18,7 @@ class ExtractorService
 
         foreach ($this->rules as $name => $rule)
         {
-            $values[$name] = $this->resolve($rule, $source);
+            $values[$name] = $this->cache[$rule] ?? $this->resolve($rule, $source);
         }
 
         return $values;
@@ -31,6 +31,8 @@ class ExtractorService
         foreach($path as $instruction) {
             $tree = $this->execute($instruction, $tree);
         }
+
+        $this->cache[$rule] = $tree['value'] ?? null;
 
         return $tree['value'] ?? null;
     }

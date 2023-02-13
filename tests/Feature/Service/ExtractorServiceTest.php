@@ -4,6 +4,7 @@ namespace Tests\Feature\Service;
 
 use App\Services\Processor\ExtractorService;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class ExtractorServiceTest extends TestCase
