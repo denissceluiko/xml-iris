@@ -57,7 +57,7 @@ class SupplierPull implements ShouldQueue
         {
             $ean = $this->getEAN($row['value']);
             if (empty($ean)) continue;
-            $batch[] = new ProductUpsert($this->supplier->id, $ean, $row['value']);
+            $batch[] = new ProductUpsert($this->supplier->id, $ean, $row);
         }
 
         // Dispatch batches ProductUpdate

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class CompilierController extends Controller
+class CompilerController extends Controller
 {
     //
 }

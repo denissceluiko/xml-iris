@@ -86,8 +86,8 @@ class Supplier extends Model
         return $this->hasMany(Product::class);
     }
 
-    public function compiliers() : BelongsToMany
+    public function compilers() : BelongsToMany
     {
-        return $this->belongsToMany(Compilier::class);
+        return $this->belongsToMany(Compiler::class)->using(Processor::class);
     }
 }

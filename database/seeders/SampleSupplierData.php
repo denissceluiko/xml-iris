@@ -16,7 +16,7 @@ class SampleSupplierData extends Seeder
     public function run()
     {
         Supplier::factory()
-            ->uri('sample_supplier_simple.xml')
+            ->uri('sample_supplier.xml')
             ->config([
                 "xmlns" => "",
                 "root_tag" => "produkty",

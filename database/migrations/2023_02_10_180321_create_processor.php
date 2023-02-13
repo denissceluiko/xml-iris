@@ -13,11 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('compilier_supplier', function (Blueprint $table) {
-            $table->unsignedBigInteger('compilier_id');
+        Schema::create('processors', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('compiler_id');
             $table->unsignedBigInteger('supplier_id');
+            $table->json('mappings')->nullable();
+            $table->json('transformations')->nullable();
+            $table->timestamps();
 
-            $table->unique(['compilier_id', 'supplier_id']);
+            $table->unique(['compiler_id', 'supplier_id']);
         });
     }
 
@@ -28,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropifExists('compilier_supplier');
+        Schema::dropifExists('processors');
     }
 };
