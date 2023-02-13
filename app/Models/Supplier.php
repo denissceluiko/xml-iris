@@ -2,89 +2,92 @@
 
 namespace App\Models;
 
+use App\Jobs\SupplierPull;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Http;
-use Sabre\Xml\Reader;
 
 class Supplier extends Model
 {
     use HasFactory;
+
+    protected $requiredConfigKeys = [
+        'root_tag',
+        'product_tag',
+        'source_type',
+    ];
 
     protected $casts = [
         'structure' => 'array',
         'config' => 'array',
     ];
 
-    public function pull() : array
+    public function pull() : void
     {
-        $service = new \Sabre\Xml\Service();
-        $service->elementMap = $this->generateElementMap();
+        if (!$this->canPull()) return;
 
-        // foreach ($service->parse($this->getFileContents()) as $key => $row)
-        // {
-        //     $product = $this->resolve($row);
-        //     $this->products()->updateOrCreate($product);
-        // }
-
-        return $service->parse($this->getFileContents());
+        SupplierPull::dispatch($this);
     }
 
-    protected function getFileContents() : string
-    {
-        if (file_exists($this->uri))
-            return  file_get_contents($this->uri);
+    /**
+     * Helpers
+     *
+     */
 
-        $response = Http::get($this->uri);
-
-        return $response->ok() ? $response->body() : null;
-    }
-
-    protected function generateElementMap() : array
-    {
-        $map = [];
-
-        $map = array_merge($this->resolveFields($this->xmlns($this->config('product_tag')), $this->structure), $map);
-
-        return $map;
-    }
-
-    protected function resolveFields(string $parent, array $fields) : array
-    {
-        $map = [];
-
-        foreach ($fields as $name => $field) {
-            if (!is_array($field) || !isset($field['type'])) continue;
-
-            if ($field['type'] == 'repeatingElements')
-            {
-                $map[$this->xmlns($name)] = function (Reader $reader) use ($field) {
-                    return \Sabre\Xml\Deserializer\repeatingElements($reader, $field['child']);
-                };
-            } else if ($field['type'] == 'keyValue')
-            {
-                $map[$this->xmlns($name)] = function (Reader $reader) {
-                    return \Sabre\Xml\Deserializer\keyValue($reader, $this->config('xmlns'));
-                };
-            }
-        }
-
-        return $map;
-    }
-
-    protected function xmlns(string $selector = '') : string
-    {
-        return '{'.$this->config('xmlns').'}'.$selector;
-    }
 
     protected function config(string $key) : string
     {
         return $this->config[$key] ?? '';
     }
 
+    public function canPull() : bool
+    {
+        if (empty($this->uri)) return false;
+        if (!$this->configKeysSet()) return false;
+        if (!is_array($this->structure)) return false;
+
+        return true;
+    }
+
+    protected function configKeysSet() : bool
+    {
+        foreach ($this->requiredConfigKeys as $key) {
+            if ($this->config($key) == '') return false;
+        }
+
+        return true;
+    }
+
+    public function getSourceType()
+    {
+        return $this->config('source_type') == '' ? $this->guessSourceType() : $this->config('source_type');
+    }
+
+    protected function guessSourceType() : string|null
+    {
+        $parts = explode('.', $this->uri);
+        $extenstion = strtolower(array_pop($parts));
+
+        if ($extenstion == 'xml')
+            return $extenstion;
+
+        return null;
+    }
+
+    /**
+     * Relationships
+     *
+     */
+
+
     public function products() : HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function compiliers() : BelongsToMany
+    {
+        return $this->belongsToMany(Compilier::class);
     }
 }

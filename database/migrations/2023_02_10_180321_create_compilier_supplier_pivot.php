@@ -13,12 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('products', function (Blueprint $table) {
-            $table->id();
+        Schema::create('compilier_supplier', function (Blueprint $table) {
+            $table->unsignedBigInteger('compilier_id');
             $table->unsignedBigInteger('supplier_id');
-            $table->string('ean')->index();
-            $table->json('values')->nullable();
-            $table->timestamps();
+
+            $table->unique(['compilier_id', 'supplier_id']);
         });
     }
 
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('products');
+        Schema::dropifExists('compilier_supplier');
     }
 };

@@ -18,42 +18,28 @@ class SupplierFactory extends Factory
     {
         return [
             'name' => fake()->words(2, true),
-            'uri' => storage_path('app/public/sample_supplier.xml'),
-            'config' => [
-                'xmlns' => '',
-                'root_tag' => 'produkty',
-                'product_tag' => 'produkt',
-            ],
-            'structure' => [
-                "ean" => "string",
-                "cena" => [
-                  "type" => "repeatingElements",
-                  "child" => "cena_netto",
-                ],
-                "nazwy" => [
-                  "type" => "repeatingElements",
-                  "child" => "nazwa",
-                ],
-                "opisy" => [
-                  "type" => "repeatingElements",
-                  "child" => "opis",
-                ],
-                "produkt" => [
-                  "type" => "keyValue",
-                ],
-                "zdjecia" => [
-                  "type" => "repeatingElements",
-                  "child" => "zdjecie",
-                ],
-                "produkty" => [
-                  "type" => "repeatingElements",
-                  "child" => "produkt",
-                ],
-                "kategoria" => "string",
-                "producent" => "string",
-                "dostepnosc" => "int",
-                "kategoria_tree" => "string",
-              ],
         ];
     }
+
+    public function uri(string $uri) : self
+    {
+        return $this->state(function (array $attributes) use ($uri) {
+            return ['uri' => $uri];
+        });
+    }
+
+    public function config(array $config) : self
+    {
+        return $this->state(function (array $attributes) use ($config) {
+            return ['config' => $config];
+        });
+    }
+
+    public function structure(array $structure) : self
+    {
+        return $this->state(function (array $attributes) use ($structure) {
+            return ['structure' => $structure];
+        });
+    }
+
 }

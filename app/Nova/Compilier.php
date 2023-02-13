@@ -3,20 +3,17 @@
 namespace App\Nova;
 
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class Product extends Resource
+class Compilier extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
      * @var string
      */
-    public static $model = \App\Models\Product::class;
+    public static $model = \App\Models\Compilier::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -44,11 +41,6 @@ class Product extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            BelongsTo::make('Supplier'),
-            Text::make(__('EAN'), 'ean')->sortable(),
-            Code::make(__('Values'), 'values')
-                ->json()
-                ->rules('json'),
         ];
     }
 

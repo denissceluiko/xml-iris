@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\Text;
@@ -23,7 +24,7 @@ class Supplier extends Resource
      *
      * @var string
      */
-    public static $title = 'id';
+    public static $title = 'name';
 
     /**
      * The columns that should be searched.
@@ -48,12 +49,14 @@ class Supplier extends Resource
             Text::make(__('URI'), 'uri'),
             KeyValue::make(__('Configuration'), 'config')->rules('json')->default([
                 'xmlns' => '',
+                'source_type' => '',
                 'root_tag' => '',
                 'product_tag' => '',
             ])->disableDeletingRows()->disableAddingRows()->disableEditingKeys(),
             Code::make(__('Structure'), 'structure')
                     ->rules('json')
                     ->json(),
+            HasMany::make('Products'),
         ];
     }
 
@@ -98,6 +101,8 @@ class Supplier extends Resource
      */
     public function actions(Request $request)
     {
-        return [];
+        return [
+            Actions\SupplierPull::make(),
+        ];
     }
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<products>
+	<product>
+		<ean>0000000000000</ean>
+		<name lang="en">Sample product</name>
+		<stock>99</stock>
+		<price_data>
+			<currency code="EUR">€</currency>
+			<price>10.00</price>
+		</price_data>
+		<images>
+			<image src="https://example.com/images/1.png"></image>
+			<image src="https://example.com/images/2.png"></image>
+			<image src="https://example.com/images/3.png"></image>
+		</images>
+	</product>
+</products>

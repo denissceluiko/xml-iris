@@ -2,37 +2,135 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\SupplierPull;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SupplierTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * A basic feature test example.
-     *
-     * @return void
-     */
-    public function test_can_pull_supplier()
+    public function setUp() : void
     {
-        $supplier = Supplier::factory()->create();
+        parent::setUp();
 
-        $response = $this->get(route('supplier.show', $supplier));
-
-        $response->assertStatus(200);
-        $response->assertSee('5903396184178');
-        $response->assertSee('[kategoria]');
+        config()->set('filesystems.disks.local.root', base_path('tests/data'));
     }
 
-    public function test_can_save_products()
+    /**
+     * @test
+     * @return boolean
+     */
+    public function can_dispatch_pull_job()
     {
-        // $supplier = Supplier::factory()->create();
+        Bus::fake();
 
-        // $supplier->pull();
+        $supplier = Supplier::factory()
+                        ->uri(Storage::path('supplier_import_simple.xml'))
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                        ])
+                        ->structure([])
+                        ->create();
+        $supplier->pull();
 
-        // $this->assertDatabaseCount('products', 4);
+        Bus::assertDispatched(SupplierPull::class);
+
+    }
+
+    /**
+     * @test
+     * @return boolean
+     */
+    public function will_not_dispatch_pull_job_when_uri_not_configured()
+    {
+        Bus::fake();
+
+        // `uri` is not nullable in the DB but also can't fail empty() check
+        $supplier = Supplier::factory()
+                        ->uri('')
+                        ->structure([])
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                        ])
+                        ->create();
+
+        $supplier->pull();
+
+        Bus::assertNotDispatched(SupplierPull::class);
+    }
+
+    /**
+     * @test
+     * @return boolean
+     */
+    public function will_not_dispatch_pull_job_when_config_not_configured()
+    {
+        Bus::fake();
+
+        // `uri` is not nullable in the DB but also can't fail empty() check
+        $supplier = Supplier::factory()
+                        ->uri(Storage::path('supplier_import_simple.xml'))
+                        ->structure([])
+                        ->config([])
+                        ->create();
+
+        $supplier->pull();
+
+        Bus::assertNotDispatched(SupplierPull::class);
+    }
+
+    /**
+     * @test
+     * @return boolean
+     */
+    public function will_not_dispatch_pull_job_when_config_not_fully_configured()
+    {
+        Bus::fake();
+
+        // `uri` is not nullable in the DB but also can't fail empty() check
+        $supplier = Supplier::factory()
+                        ->uri(Storage::path('supplier_import_simple.xml'))
+                        ->structure([])
+                        ->config([
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                        ])
+                        ->create();
+
+        $supplier->pull();
+
+        Bus::assertNotDispatched(SupplierPull::class);
+    }
+
+    /**
+     * @test
+     * @return boolean
+     */
+    public function will_not_dispatch_pull_job_when_structure_not_configured()
+    {
+        Bus::fake();
+
+        // `uri` is not nullable in the DB but also can't fail empty() check
+        $supplier = Supplier::factory()
+                        ->uri(Storage::path('supplier_import_simple.xml'))
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                        ])
+                        ->create();
+
+        $supplier->pull();
+
+        Bus::assertNotDispatched(SupplierPull::class);
     }
 }

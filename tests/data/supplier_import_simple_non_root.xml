@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<supplier>
+	<title>Supplier name</title>
+	<link>https://example.com/export.xml</link>
+	<products>
+		<product>
+			<ean>0000000000000</ean>
+			<name>Sample product</name>
+			<stock>99</stock>
+			<currency>EUR</currency>
+			<price>10.00</price>
+		</product>
+	</products>
+</supplier>

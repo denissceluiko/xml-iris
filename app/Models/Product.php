@@ -10,6 +10,12 @@ class Product extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['ean', 'values'];
+
+    protected $casts = [
+        'values' => 'array',
+    ];
+
     public function supplier() : BelongsTo
     {
         return $this->belongsTo(Supplier::class);
