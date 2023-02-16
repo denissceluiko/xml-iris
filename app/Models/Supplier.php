@@ -22,6 +22,7 @@ class Supplier extends Model
     protected $casts = [
         'structure' => 'array',
         'config' => 'array',
+        'credentials' => 'array',
     ];
 
     public function pull() : void

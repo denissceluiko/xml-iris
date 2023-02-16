@@ -6,6 +6,7 @@ use App\Models\Supplier;
 use App\Services\Supplier\PullService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -54,6 +55,32 @@ class PullServiceTest extends TestCase
 
         $service = new PullService($supplier);
         $result = $service->pull();
+
+        $this->assertEquals("Just a remote response", $result);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_pull_remote_file_with_basic_auth()
+    {
+        $supplier = Supplier::factory()
+                        ->uri('https://example.com/supplier_export.xml')
+                        ->credentials('login', 'password')
+                        ->create();
+
+        Http::fake([
+            'example.com/*' => Http::response("Just a remote response")
+        ]);
+
+        $service = new PullService($supplier);
+        $result = $service->pull();
+
+        Http::assertSent(function (Request $request) {
+            return $request->hasHeader('Authorization') &&
+                   $request->method() =='POST';
+        });
 
         $this->assertEquals("Just a remote response", $result);
     }

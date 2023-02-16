@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use App\Models\Supplier as ModelsSupplier;
 use Illuminate\Http\Request;
+use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
@@ -47,6 +48,15 @@ class Supplier extends Resource
             ID::make(__('ID'), 'id')->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
             Text::make(__('URI'), 'uri'),
+
+            KeyValue::make(__('Credentials'), 'credentials')->default([
+                'login' => '',
+                'password' => '',
+            ])->showOnUpdating(),
+            Boolean::make(__('Credentials'), function() {
+                return !empty($this->credentials['password']);
+            }),
+
             KeyValue::make(__('Configuration'), 'config')->rules('json')
                 ->default(ModelsSupplier::getConfigKeys())
                 ->disableDeletingRows()

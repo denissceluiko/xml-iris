@@ -46,6 +46,16 @@ class SupplierFactory extends Factory
         });
     }
 
+    public function credentials(string $login, string $password) : self
+    {
+        return $this->state(function (array $attributes) use ($login, $password) {
+            return ['credentials' => [
+                'login' => $login,
+                'password' => $password,
+            ]];
+        });
+    }
+
     public function structure(array $structure) : self
     {
         return $this->state(function (array $attributes) use ($structure) {
