@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "53537e15b642b05e173e3aa74e1bae07",
+    "content-hash": "4781f796888a93de15846887c79d8b9b",
     "packages": [
         {
             "name": "brick/math",
@@ -184,6 +184,55 @@
                 "source": "https://github.com/cakephp/chronos"
             },
             "time": "2022-11-08T02:17:04+00:00"
+        },
+        {
+            "name": "denissimon/formula-parser",
+            "version": "v2.7.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/denissimon/formula-parser.git",
+                "reference": "d6d19374f75f9a353fbbdb0945eb9dbbb602f8b2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/denissimon/formula-parser/zipball/d6d19374f75f9a353fbbdb0945eb9dbbb602f8b2",
+                "reference": "d6d19374f75f9a353fbbdb0945eb9dbbb602f8b2",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FormulaParser\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Denis Simon",
+                    "email": "denis.v.simon@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Parsing and evaluating mathematical formulas given as strings.",
+            "keywords": [
+                "Evaluation",
+                "expression",
+                "formula",
+                "math",
+                "parser",
+                "parsing"
+            ],
+            "support": {
+                "issues": "https://github.com/denissimon/formula-parser/issues",
+                "source": "https://github.com/denissimon/formula-parser/tree/v2.7.1"
+            },
+            "time": "2019-11-05T10:48:08+00:00"
         },
         {
             "name": "dflydev/dot-access-data",

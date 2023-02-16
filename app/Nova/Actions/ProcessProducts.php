@@ -2,17 +2,17 @@
 
 namespace App\Nova\Actions;
 
+use App\Jobs\ProcessProducts as JobsProcessProducts;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
-use Laravel\Nova\Actions\Actionable;
 use Laravel\Nova\Fields\ActionFields;
 
-class SupplierPull extends Action
+class ProcessProducts extends Action
 {
-    use Actionable, InteractsWithQueue, Queueable;
+    use InteractsWithQueue, Queueable;
 
     /**
      * Perform the action on the given models.
@@ -23,8 +23,8 @@ class SupplierPull extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        foreach ($models as $supplier) {
-            $supplier->pull();
+        foreach ($models as $model) {
+            JobsProcessProducts::dispatch($model);
         }
     }
 

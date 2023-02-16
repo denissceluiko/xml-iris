@@ -31,12 +31,6 @@ class SupplierTest extends TestCase
 
         $supplier = Supplier::factory()
                         ->uri(Storage::path('supplier_import_simple.xml'))
-                        ->config([
-                            'root_tag' => 'products',
-                            'product_tag' => 'product',
-                            'source_type' => 'xml',
-                        ])
-                        ->structure([])
                         ->create();
         $supplier->pull();
 
@@ -55,12 +49,6 @@ class SupplierTest extends TestCase
         // `uri` is not nullable in the DB but also can't fail empty() check
         $supplier = Supplier::factory()
                         ->uri('')
-                        ->structure([])
-                        ->config([
-                            'root_tag' => 'products',
-                            'product_tag' => 'product',
-                            'source_type' => 'xml',
-                        ])
                         ->create();
 
         $supplier->pull();
@@ -79,7 +67,6 @@ class SupplierTest extends TestCase
         // `uri` is not nullable in the DB but also can't fail empty() check
         $supplier = Supplier::factory()
                         ->uri(Storage::path('supplier_import_simple.xml'))
-                        ->structure([])
                         ->config([])
                         ->create();
 
@@ -99,7 +86,6 @@ class SupplierTest extends TestCase
         // `uri` is not nullable in the DB but also can't fail empty() check
         $supplier = Supplier::factory()
                         ->uri(Storage::path('supplier_import_simple.xml'))
-                        ->structure([])
                         ->config([
                             'product_tag' => 'product',
                             'source_type' => 'xml',
@@ -127,6 +113,7 @@ class SupplierTest extends TestCase
                             'product_tag' => 'product',
                             'source_type' => 'xml',
                         ])
+                        ->structure([])
                         ->create();
 
         $supplier->pull();

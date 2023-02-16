@@ -19,6 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('supplier_id');
             $table->json('mappings')->nullable();
             $table->json('transformations')->nullable();
+            $table->dateTime('last_run_at')->nullable();
             $table->timestamps();
 
             $table->unique(['compiler_id', 'supplier_id']);

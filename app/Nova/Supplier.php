@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Models\Supplier as ModelsSupplier;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\HasMany;
@@ -46,12 +47,11 @@ class Supplier extends Resource
             ID::make(__('ID'), 'id')->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
             Text::make(__('URI'), 'uri'),
-            KeyValue::make(__('Configuration'), 'config')->rules('json')->default([
-                'xmlns' => '',
-                'source_type' => '',
-                'root_tag' => '',
-                'product_tag' => '',
-            ])->disableDeletingRows()->disableAddingRows()->disableEditingKeys(),
+            KeyValue::make(__('Configuration'), 'config')->rules('json')
+                ->default(ModelsSupplier::getConfigKeys())
+                ->disableDeletingRows()
+                ->disableAddingRows()
+                ->disableEditingKeys(),
             Code::make(__('Structure'), 'structure')
                     ->rules('json')
                     ->json(),

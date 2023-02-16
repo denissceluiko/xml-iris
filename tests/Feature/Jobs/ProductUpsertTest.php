@@ -20,14 +20,17 @@ class ProductUpsertTest extends TestCase
     public function can_add_product()
     {
         $supplier = Supplier::factory()
-                        ->uri('this-file-does-not-exist.xml')
-                        ->config([])
-                        ->structure([
+                        ->config([
+                            'root_tag' => 'product',
+                            'product_tag' => 'products',
+                            'source_type' => 'xls',
+                        ])
+                        ->productStructure([
                             "ean" => "ean"
                         ])
                         ->create();
 
-        $product = Product::factory()->generateValues($supplier->structure, $supplier->config)->make();
+        $product = Product::factory()->supplier($supplier)->make();
 
         [$job, $batch] = (new ProductUpsert($supplier->id, $product->ean, $product->values))->withFakeBatch();
         $job->handle();
@@ -45,16 +48,18 @@ class ProductUpsertTest extends TestCase
     public function can_update_product()
     {
         $supplier = Supplier::factory()
-                        ->uri('this-file-does-not-exist.xml')
-                        ->config([])
-                        ->structure([
+                        ->config([
+                            'root_tag' => 'product',
+                            'product_tag' => 'products',
+                            'source_type' => 'xls',
+                        ])
+                        ->productStructure([
                             "ean" => "ean"
                         ])
                         ->create();
 
         $product = Product::factory()
                     ->supplier($supplier)
-                    ->generateValues($supplier->structure, $supplier->config)
                     ->create();
 
         $this->assertDatabaseHas('products', [

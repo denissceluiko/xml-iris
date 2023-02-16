@@ -12,10 +12,11 @@ class Supplier extends Model
 {
     use HasFactory;
 
-    protected $requiredConfigKeys = [
-        'root_tag',
-        'product_tag',
-        'source_type',
+    protected static $configKeys = [
+        'xmlns' => 'optional',
+        'root_tag' => 'required',
+        'product_tag' => 'required',
+        'source_type' => 'required',
     ];
 
     protected $casts = [
@@ -34,7 +35,7 @@ class Supplier extends Model
      * Helpers
      *
      */
-
+    
 
     protected function config(string $key) : string
     {
@@ -45,18 +46,23 @@ class Supplier extends Model
     {
         if (empty($this->uri)) return false;
         if (!$this->configKeysSet()) return false;
-        if (!is_array($this->structure)) return false;
+        if (!is_array($this->structure) || empty($this->structure)) return false;
 
         return true;
     }
 
     protected function configKeysSet() : bool
     {
-        foreach ($this->requiredConfigKeys as $key) {
-            if ($this->config($key) == '') return false;
+        foreach (self::$configKeys as $key => $value) {
+            if ($this->config($key) == '' && $value == 'required') return false;
         }
 
         return true;
+    }
+
+    public static function getConfigKeys() : array
+    {
+        return self::$configKeys;
     }
 
     public function getSourceType()

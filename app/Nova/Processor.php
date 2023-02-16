@@ -2,9 +2,11 @@
 
 namespace App\Nova;
 
+use App\Nova\Actions\ProcessProducts;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
 
@@ -33,6 +35,8 @@ class Processor extends Resource
         'id'
     ];
 
+    public static $displayInNavigation = false;
+
     /**
      * Get the fields displayed by the resource.
      *
@@ -51,6 +55,7 @@ class Processor extends Resource
             KeyValue::make(__('Transformations'), 'transformations')
                 ->keyLabel(__('Field'))
                 ->valueLabel(__('Transformation')),
+            HasMany::make(__('Processed products'), 'processedProducts'),
         ];
     }
 
@@ -121,7 +126,9 @@ class Processor extends Resource
      */
     public function actions(Request $request)
     {
-        return [];
+        return [
+            ProcessProducts::make(),
+        ];
     }
 
     public function fillMappings() : array
@@ -138,7 +145,7 @@ class Processor extends Resource
 
     public function generateFields($master, $current)
     {
-        $diff = array_diff_key($master, $current);
+        $diff = array_diff_key($master, $current ?? []);
 
         foreach ($diff as $key => $value) {
             $current[$key] = $value;

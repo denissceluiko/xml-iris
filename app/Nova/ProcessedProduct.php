@@ -2,29 +2,29 @@
 
 namespace App\Nova;
 
+use App\Models\ProcessedProduct as ModelsProcessedProduct;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\Code;
-use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class Product extends Resource
+class ProcessedProduct extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
      * @var string
      */
-    public static $model = \App\Models\Product::class;
+    public static $model = \App\Models\ProcessedProduct::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
      *
      * @var string
      */
-    public static $title = 'ean';
+    public static $title = 'id';
 
     /**
      * The columns that should be searched.
@@ -32,7 +32,7 @@ class Product extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'ean',
+        'id',
     ];
 
     public static $displayInNavigation = false;
@@ -47,12 +47,14 @@ class Product extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            BelongsTo::make('Supplier'),
-            Text::make(__('EAN'), 'ean')->sortable(),
-            Code::make(__('Values'), 'values')
-                ->json()
-                ->rules('json'),
-            DateTime::make(__('Updated at'), 'updated_at')->readonly(),
+            BelongsTo::make(__('Product'), 'product'),
+            BelongsTo::make(__('Processor'), 'processor'),
+            Text::make(__('Staleness'), function() {
+                return ModelsProcessedProduct::$staleness[$this->stale_level];
+            }),
+
+            KeyValue::make(__('Extracted data'), 'extracted_data'),
+            KeyValue::make(__('Transformed data'), 'transformed_data'),
         ];
     }
 
@@ -98,15 +100,5 @@ class Product extends Resource
     public function actions(Request $request)
     {
         return [];
-    }
-
-    /**
-     * Get the search result subtitle for the resource.
-     *
-     * @return string
-     */
-    public function subtitle()
-    {
-        return "Supplier: {$this->supplier->name}";
     }
 }

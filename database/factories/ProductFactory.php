@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,14 +19,25 @@ class ProductFactory extends Factory
     {
         return [
             'ean' => fake()->ean13(),
+            'supplier_id' => Supplier::factory(),
+            'values' => function ($attributes) {
+                return $this->generateValues($this->extractProductStructure(Supplier::find($attributes['supplier_id'])));
+            },
         ];
     }
 
     public function supplier($supplier)
     {
         return $this->state(function (array $attributes) use ($supplier) {
-            return ['supplier_id' => is_int($supplier) ? $supplier : $supplier->id];
+            return ['supplier_id' => $supplier];
         });
+    }
+
+    protected function extractProductStructure(Supplier $supplier) : array
+    {
+        return isset($supplier->structure[$supplier->config['root_tag']])
+                    ? $supplier->structure[$supplier->config['root_tag']]['value']
+                    : $supplier->structure;
     }
 
     /**
@@ -34,19 +46,18 @@ class ProductFactory extends Factory
      * @param array $except
      * @return self
      */
-    public function generateValues(array $rules, array $except = []) : self
+    protected function generateValues(array $rules) : array
     {
-        return $this->state(function(array $attributes) use ($rules, $except) {
-            $fields = [];
+        $fields = [];
 
-            foreach ($rules as $key => $rule) {
-                if (array_key_exists($key, $except)) continue;
+        foreach ($rules['value'] as $key => $rule) {
+            $fields[$key] = $this->generateField($key, $rule);
+        }
 
-                $fields[$key] = $this->generateField($key, $rule);
-            }
-
-            return ['values' => $fields];
-        });
+        return [
+            'attributes' => $this->generateAttributes($rules['attributes'] ?? []),
+            'value' => $fields
+        ];
     }
 
     /**
