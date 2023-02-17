@@ -48,18 +48,22 @@ class SupplierPull implements ShouldQueue
     public function handle()
     {
         $this->log("Starting import");
+        $this->log("Memory: ".$this->processPeakMemUsage());
 
         // Pull XML
         $path = (new PullService($this->supplier))->pull();
         $this->log("Data path loaded.");
+        $this->log("Memory: ".$this->processPeakMemUsage());
 
         $supplierData = (new ParseService($this->supplier))->parse($path);
         $this->log("Data parsed");
+        $this->log("Memory: ".$this->processPeakMemUsage());
 
         $products = $this->getProductsList((new ParseService($this->supplier))->parse($path));
         unset($supplierData);
 
         $this->log("Products found: ".count($products));
+        $this->log("Memory: ".$this->processPeakMemUsage());
 
         // Divide into batches
         $batch = [];
@@ -84,6 +88,7 @@ class SupplierPull implements ShouldQueue
         $this->upsert($batch);
 
         $this->log("Products processed");
+        $this->log("Memory: ".$this->processPeakMemUsage());
 
         // Clean up the imported file
         Storage::disk('import')->delete($path);
@@ -126,5 +131,19 @@ class SupplierPull implements ShouldQueue
     protected function log(string $message)
     {
         Log::channel('import')->info("[Supplier:\t{$this->supplier->id}] $message");
+    }
+
+    //memcheck.php
+    /**
+     * Gets peak memory usage of a process in KiB from /proc.../status.
+     *
+     * @return int|bool VmPeak, value in KiB. False if data could not be found.
+     */
+    protected function processPeakMemUsage()
+    {
+        $status = file_get_contents('/proc/' . getmypid() . '/status');
+        $matches = array();
+        preg_match_all('/^(VmPeak):\s*([0-9]+).*$/im', $status, $matches);
+        return !isset($matches[2][0]) ? false : intval($matches[2][0]);
     }
 }
