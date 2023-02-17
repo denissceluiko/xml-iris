@@ -47,14 +47,14 @@ class SupplierPull implements ShouldQueue
      */
     public function handle()
     {
-        $this->log('Starting import for supplier '. $this->supplier->id);
+        $this->log("Starting import");
 
         // Pull XML
         $path = (new PullService($this->supplier))->pull();
-        $this->log("Supplier {$this->supplier->id} data path loaded.");
+        $this->log("Data path loaded.");
 
         $supplierData = (new ParseService($this->supplier))->parse($path);
-        $this->log("Supplier {$this->supplier->id} data parsed");
+        $this->log("Data parsed");
 
         $products = $this->getProductsList($supplierData);
 
@@ -73,6 +73,8 @@ class SupplierPull implements ShouldQueue
             ];
         }
 
+        $this->log("Products found: ".count($products));
+
         // Insert
         foreach(array_chunk($batch, 100, true) as $chunk)
         {
@@ -81,6 +83,7 @@ class SupplierPull implements ShouldQueue
 
         // Clean up the imported file
         Storage::disk('import')->delete($path);
+        $this->log("Import finished.");
     }
 
     /**
@@ -118,6 +121,6 @@ class SupplierPull implements ShouldQueue
 
     protected function log(string $message)
     {
-        Log::channel('import')->info($message);
+        Log::channel('import')->info("[Supplier:\t{$this->supplier->id}] $message");
     }
 }
