@@ -19,7 +19,7 @@ class PullService
 
     public function pull() : string
     {
-        Log::info('Pull entered');
+        Log::channel('import')->info('Pull entered');
 
         if (Storage::exists($this->supplier->uri)) {
             $path = Storage::disk('import')->putFile("", new File(Storage::path($this->supplier->uri)));
@@ -37,11 +37,12 @@ class PullService
             $name = date('d.m.Y.H.i.s')."-{$this->supplier->id}.import";
             Storage::disk('import')->put($name, $response->body());
         } else {
-            Log::info("Response: ".$response->status());
-            Log::info("Response: ".json_encode($response->headers()));
-            Log::info("Response: ".$response->body());
+            Log::channel('import')->warning("Response: ".$response->status());
+            Log::channel('import')->warning("Response: ".json_encode($response->headers()));
+            Log::channel('import')->warning("Response: ".$response->body());
         }
 
+        Log::channel('import')->info('Pull finished');
         return $response->ok() ? $name : null;
     }
 }

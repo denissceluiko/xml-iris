@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Supplier\ParseService;
 use App\Services\Supplier\PullService;
@@ -12,7 +13,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -65,22 +65,22 @@ class SupplierPull implements ShouldQueue
         {
             $ean = $this->getEAN($row['value']);
             if (empty($ean)) continue;
-            $batch[] = new ProductUpsert($this->supplier->id, $ean, $row);
+
+            $batch[] = [
+                'ean' => $ean,
+                'supplier_id' => $this->supplier->id,
+                'values' => json_encode($row['value']),
+            ];
         }
 
-        $this->log("Supplier {$this->supplier->id} batch upserting started");
-        // Dispatch batches ProductUpdate
-        Bus::batch($batch)->then(function (Batch $batch) {
-            Log::channel('import')->info("Supplier upserting successful");
-            // $this->log();
-        })->catch(function (Batch $batch, Throwable $e) {
-            Log::channel('import')->info("Supplier data exception: {$e->getMessage()}");
-            // $this->log();
-        })->finally(function (Batch $batch) use($path) {
-            Storage::disk('import')->delete($path);
-            Log::channel('import')->info("Supplier loading finalized.");
-            // $this->log();
-        })->dispatch();
+        // Insert
+        foreach(array_chunk($batch, 100, true) as $chunk)
+        {
+            $this->upsert($chunk);
+        }
+
+        // Clean up the imported file
+        Storage::disk('import')->delete($path);
     }
 
     /**
@@ -100,10 +100,15 @@ class SupplierPull implements ShouldQueue
     {
         foreach ($productRow as $field) {
             if ($field['name'] == "{}ean") {
-                return $field['value'];
+                return $field['value'] ?? '';
             }
         }
         return '';
+    }
+
+    protected function upsert(array $chunk) : void
+    {
+        Product::upsert($chunk, ['supplier_id', 'ean'], ['values']);
     }
 
     protected function config(string $key) : string

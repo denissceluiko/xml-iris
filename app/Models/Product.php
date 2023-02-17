@@ -10,7 +10,7 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['ean', 'values'];
+    protected $fillable = ['ean', 'values', 'supplier_id'];
 
     protected $casts = [
         'values' => 'array',
