@@ -13,6 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -45,10 +46,14 @@ class SupplierPull implements ShouldQueue
      */
     public function handle()
     {
+        $this->log('Starting import for supplier '. $this->supplier->id);
+
         // Pull XML
         $path = (new PullService($this->supplier))->pull();
         $supplierRawData = Storage::disk('import')->get($path);
+        $this->log("Supplier {$this->supplier->id} data loaded.");
         $supplierData = (new ParseService($this->supplier))->parse($supplierRawData);
+        $this->log("Supplier {$this->supplier->id} data parsed");
 
         $products = $this->getProductsList($supplierData);
 
@@ -62,13 +67,18 @@ class SupplierPull implements ShouldQueue
             $batch[] = new ProductUpsert($this->supplier->id, $ean, $row);
         }
 
+        $this->log("Supplier {$this->supplier->id} batch upserting started");
         // Dispatch batches ProductUpdate
         Bus::batch($batch)->then(function (Batch $batch) {
-
+            Log::channel('import')->info("Supplier upserting successful");
+            // $this->log();
         })->catch(function (Batch $batch, Throwable $e) {
-
+            Log::channel('import')->info("Supplier data exception: {$e->getMessage()}");
+            // $this->log();
         })->finally(function (Batch $batch) use($path) {
             Storage::disk('import')->delete($path);
+            Log::channel('import')->info("Supplier loading finalized.");
+            // $this->log();
         })->dispatch();
     }
 
@@ -98,5 +108,10 @@ class SupplierPull implements ShouldQueue
     protected function config(string $key) : string
     {
         return $this->supplier->config[$key] ?? '';
+    }
+
+    protected function log(string $message)
+    {
+        Log::channel('import')->info($message);
     }
 }
