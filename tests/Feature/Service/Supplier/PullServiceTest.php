@@ -81,7 +81,7 @@ class PullServiceTest extends TestCase
 
         Http::assertSent(function (Request $request) {
             return $request->hasHeader('Authorization') &&
-                   $request->method() =='POST';
+                   $request->method() =='GET';
         });
 
         $contents = Storage::disk('import')->get($result);

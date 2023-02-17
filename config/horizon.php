@@ -192,12 +192,29 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+        'supervisor-long-running' => [
+            'connection' => 'redis-long-running',
+            'queue' => ['long-running-queue'],
+            'balance' => 'auto',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 1,
+            'timeout' => 600,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
         'production' => [
             'supervisor-1' => [
-                'maxProcesses' => 3,
+                'maxProcesses' => 5,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 10,
+            ],
+            'supervisor-long-running' => [
+                'maxProcesses' => 2,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],

@@ -37,6 +37,7 @@ class SupplierPull implements ShouldQueue
     public function __construct(Supplier $supplier)
     {
         $this->supplier = $supplier->withoutRelations();
+        $this->onQueue('long-running-queue');
     }
 
     /**
