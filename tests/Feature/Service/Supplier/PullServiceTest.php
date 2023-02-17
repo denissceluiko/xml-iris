@@ -20,6 +20,7 @@ class PullServiceTest extends TestCase
         parent::setUp();
 
         config()->set('filesystems.disks.local.root', base_path('tests/data'));
+        config()->set('filesystems.disks.import.root', base_path('tests/data/import'));
     }
 
     /**
@@ -33,7 +34,7 @@ class PullServiceTest extends TestCase
                         ->create();
 
         $service = new PullService($supplier);
-        $result = $service->pull();
+        $result = Storage::disk('import')->get($service->pull());
 
         $this->assertEquals(Storage::get('supplier_import_simple.xml'), $result);
     }
@@ -56,7 +57,8 @@ class PullServiceTest extends TestCase
         $service = new PullService($supplier);
         $result = $service->pull();
 
-        $this->assertEquals("Just a remote response", $result);
+        $contents = Storage::disk('import')->get($result);
+        $this->assertEquals("Just a remote response", $contents);
     }
 
     /**
@@ -82,6 +84,7 @@ class PullServiceTest extends TestCase
                    $request->method() =='POST';
         });
 
-        $this->assertEquals("Just a remote response", $result);
+        $contents = Storage::disk('import')->get($result);
+        $this->assertEquals("Just a remote response", $contents);
     }
 }

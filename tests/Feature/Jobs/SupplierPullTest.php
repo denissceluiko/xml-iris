@@ -19,6 +19,7 @@ class SupplierPullTest extends TestCase
         parent::setUp();
 
         config()->set('filesystems.disks.local.root', base_path('tests/data'));
+        config()->set('filesystems.disks.import.root', base_path('tests/data/import'));
     }
 
     /**

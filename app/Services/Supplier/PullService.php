@@ -3,6 +3,7 @@
 namespace App\Services\Supplier;
 
 use App\Models\Supplier;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -17,9 +18,10 @@ class PullService
 
     public function pull() : string
     {
-        if (Storage::exists($this->supplier->uri))
-            return Storage::get($this->supplier->uri);
-
+        if (Storage::exists($this->supplier->uri)) {
+            $path = Storage::disk('import')->putFile("", new File(Storage::path($this->supplier->uri)));
+            return $path;
+        }
 
         if (empty($this->supplier->credentials['login']) || empty($this->supplier->credentials['password'])) {
             $response = Http::get($this->supplier->uri);
@@ -28,6 +30,11 @@ class PullService
                                 ->post($this->supplier->uri);
         }
 
-        return $response->ok() ? $response->body() : null;
+        if ($response->ok()) {
+            $name = date('d.m.Y.H.i.s')."-{$this->supplier->id}.import";
+            Storage::disk('import')->put($name, $response->body());
+        }
+
+        return $response->ok() ? $name : null;
     }
 }

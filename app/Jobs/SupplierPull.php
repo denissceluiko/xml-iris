@@ -13,6 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class SupplierPull implements ShouldQueue
@@ -45,7 +46,8 @@ class SupplierPull implements ShouldQueue
     public function handle()
     {
         // Pull XML
-        $supplierRawData = (new PullService($this->supplier))->pull();
+        $path = (new PullService($this->supplier))->pull();
+        $supplierRawData = Storage::disk('import')->get($path);
         $supplierData = (new ParseService($this->supplier))->parse($supplierRawData);
 
         $products = $this->getProductsList($supplierData);
@@ -65,8 +67,8 @@ class SupplierPull implements ShouldQueue
 
         })->catch(function (Batch $batch, Throwable $e) {
 
-        })->finally(function (Batch $batch) {
-
+        })->finally(function (Batch $batch) use($path) {
+            Storage::disk('import')->delete($path);
         })->dispatch();
     }
 
