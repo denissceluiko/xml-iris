@@ -57,6 +57,7 @@ class SupplierPull implements ShouldQueue
         $this->log("Data parsed");
 
         $products = $this->getProductsList($supplierData);
+        $this->log("Products found: ".count($products));
 
         // Divide into batches
         $batch = [];
@@ -73,7 +74,7 @@ class SupplierPull implements ShouldQueue
             ];
         }
 
-        $this->log("Products found: ".count($products));
+        $this->log("Products encoded");
 
         // Insert
         foreach(array_chunk($batch, 100, true) as $chunk)
