@@ -17,7 +17,7 @@ class PullService
         $this->supplier = $supplier;
     }
 
-    public function pull() : string
+    public function pull() : ?string
     {
         Log::channel('import')->info('Pull entered');
 
@@ -30,6 +30,9 @@ class PullService
             $response = Http::get($this->supplier->uri);
         } else {
             $response = Http::withBasicAuth($this->supplier->credentials['login'], $this->supplier->credentials['password'])
+                                ->withHeaders([
+                                    'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                                ])
                                 ->get($this->supplier->uri);
         }
 
