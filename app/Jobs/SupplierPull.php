@@ -57,13 +57,16 @@ class SupplierPull implements ShouldQueue
         $this->log("Data parsed");
 
         $products = $this->getProductsList($supplierData);
+        unset($supplierData);
+        
         $this->log("Products found: ".count($products));
 
         // Divide into batches
-        $batch = [];
 
-        foreach ($products as $key => $row)
+        foreach (array_chunk($products, 100, true) as $key => $row)
         {
+            $batch = [];
+
             $ean = $this->getEAN($row['value']);
             if (empty($ean)) continue;
 
@@ -72,15 +75,17 @@ class SupplierPull implements ShouldQueue
                 'supplier_id' => $this->supplier->id,
                 'values' => json_encode($row['value']),
             ];
+
+            $this->upsert($batch);
         }
 
         $this->log("Products encoded");
 
-        // Insert
-        foreach(array_chunk($batch, 100, true) as $chunk)
-        {
-            $this->upsert($chunk);
-        }
+        // // Insert
+        // foreach(array_chunk($batch, 100, true) as $chunk)
+        // {
+        //     $this->upsert($chunk);
+        // }
 
         // Clean up the imported file
         Storage::disk('import')->delete($path);
