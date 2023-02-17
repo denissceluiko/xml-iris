@@ -6,7 +6,9 @@ use App\Models\Supplier;
 use App\Services\Supplier\ParseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
+use Tests\Traits\CopyToImportDisk;
 
 class ParseServiceTest extends TestCase
 {
@@ -37,7 +39,10 @@ class ParseServiceTest extends TestCase
                         ])
                         ->create();
 
-        $parsed = (new ParseService($supplier))->parse("<product><name>Test</name></product>");
+        $path = sha1(date('dmyHis-test'));
+        Storage::disk('import')->put($path, "<product><name>Test</name></product>");
+
+        $parsed = (new ParseService($supplier))->parse($path);
 
         $this->assertEquals([
             "name" => [
@@ -47,6 +52,7 @@ class ParseServiceTest extends TestCase
             ],
         ], $parsed);
 
+        Storage::disk('import')->delete($path);
     }
 
     /**
@@ -60,8 +66,13 @@ class ParseServiceTest extends TestCase
                         ->structure([])
                         ->create();
 
-        $parsed = (new ParseService($supplier))->parse("just some random string");
+        $path = sha1(date('dmyHis-test'));
+        Storage::disk('import')->put($path, "just some random string");
+
+        $parsed = (new ParseService($supplier))->parse($path);
 
         $this->assertEquals([], $parsed);
+
+        Storage::disk('import')->delete($path);
     }
 }

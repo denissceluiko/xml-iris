@@ -50,9 +50,9 @@ class SupplierPull implements ShouldQueue
 
         // Pull XML
         $path = (new PullService($this->supplier))->pull();
-        $supplierRawData = Storage::disk('import')->get($path);
-        $this->log("Supplier {$this->supplier->id} data loaded.");
-        $supplierData = (new ParseService($this->supplier))->parse($supplierRawData);
+        $this->log("Supplier {$this->supplier->id} data path loaded.");
+
+        $supplierData = (new ParseService($this->supplier))->parse($path);
         $this->log("Supplier {$this->supplier->id} data parsed");
 
         $products = $this->getProductsList($supplierData);

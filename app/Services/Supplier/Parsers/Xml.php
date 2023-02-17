@@ -2,6 +2,7 @@
 
 namespace App\Services\Supplier\Parsers;
 
+use Illuminate\Support\Facades\Storage;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Service;
 
@@ -16,12 +17,12 @@ class Xml extends Parser
         $this->namespace = $namespace;
     }
 
-    public function parse(string $data) : array
+    public function parse(string $path) : array
     {
         $service = new Service();
         $service->elementMap = $this->generateElementMap();
 
-        return $service->parse($data);
+        return $service->parse(Storage::disk('import')->get($path));
     }
 
     protected function generateElementMap() : array

@@ -3,20 +3,30 @@
 namespace Tests\Feature\Service\Supplier\Parsers;
 
 use App\Services\Supplier\Parsers\Xml;
+use Illuminate\Contracts\Cache\Store;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
+use Tests\Traits\CopyToImportDisk;
 
 class XmlTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, CopyToImportDisk;
 
     public function setUp() : void
     {
         parent::setUp();
 
         config()->set('filesystems.disks.local.root', base_path('tests/data'));
+        config()->set('filesystems.disks.import.root', base_path('tests/data/import'));
+    }
+
+    public function tearDown() : void
+    {
+        $this->purgeCopies();
+
+        parent::tearDown();
     }
 
     /**
@@ -47,7 +57,7 @@ class XmlTest extends TestCase
             ]
         ], '');
 
-        $result = $parser->parse(Storage::get('supplier_import_simple.xml'));
+        $result = $parser->parse($this->copyToImport('supplier_import_simple.xml'));
 
         $this->assertEquals(
         [
@@ -118,7 +128,7 @@ class XmlTest extends TestCase
             ]
         ], '');
 
-        $result = $parser->parse(Storage::get('supplier_import_simple_non_root.xml'));
+        $result = $parser->parse($this->copyToImport('supplier_import_simple_non_root.xml'));
 
         $this->assertEquals([
             "title" => [
@@ -211,7 +221,7 @@ class XmlTest extends TestCase
             ]
         ], '');
 
-        $result = $parser->parse(Storage::get('supplier_import_nested.xml'));
+        $result = $parser->parse($this->copyToImport('supplier_import_nested.xml'));
 
         $this->assertEquals(
         [
@@ -330,7 +340,7 @@ class XmlTest extends TestCase
             ]
         ], '');
 
-        $result = $parser->parse(Storage::get('supplier_import_nested_with_attributes.xml'));
+        $result = $parser->parse($this->copyToImport('supplier_import_nested_with_attributes.xml'));
 
         $this->assertEquals(
         [

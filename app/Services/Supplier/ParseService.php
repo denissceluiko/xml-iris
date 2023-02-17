@@ -14,12 +14,12 @@ class ParseService
         $this->supplier = $supplier;
     }
 
-    public function parse(string $data) : array
+    public function parse(string $path) : array
     {
         $parser = $this->determineParser();
 
         if ($parser == 'xml') {
-            return $this->xml($data);
+            return $this->xml($path);
         }
 
         return [];
@@ -34,8 +34,8 @@ class ParseService
         return null;
     }
 
-    protected function xml(string $data)
+    protected function xml(string $path)
     {
-        return (new Xml($this->supplier->structure))->parse($data);
+        return (new Xml($this->supplier->structure))->parse($path);
     }
 }
