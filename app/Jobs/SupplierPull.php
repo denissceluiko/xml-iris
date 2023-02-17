@@ -52,6 +52,12 @@ class SupplierPull implements ShouldQueue
 
         // Pull XML
         $path = (new PullService($this->supplier))->pull();
+
+        if ($path == null) {
+            $this->fail("Data path failed to load.");
+            $this->log("Data path failed to load.");
+        }
+
         $this->log("Data path loaded.");
         $this->log("Memory: ".$this->processPeakMemUsage());
 
