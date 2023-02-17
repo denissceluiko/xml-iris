@@ -9,6 +9,7 @@
         "denissimon/formula-parser": "^2.7",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^9.19",
+        "laravel/horizon": "^5.14",
         "laravel/nova": "*",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
