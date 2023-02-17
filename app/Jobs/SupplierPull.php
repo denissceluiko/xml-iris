@@ -24,10 +24,10 @@ class SupplierPull implements ShouldQueue
     public $supplier;
 
 
-    public function middleware()
-    {
-        return [ (new WithoutOverlapping($this->supplier->id))->expireAfter(600)->dontRelease() ];
-    }
+    // public function middleware()
+    // {
+    //     return [ (new WithoutOverlapping($this->supplier->id))->expireAfter(600)->dontRelease() ];
+    // }
 
     /**
      * Create a new job instance.
