@@ -36,6 +36,6 @@ class ParseService
 
     protected function xml(string $path)
     {
-        return (new Xml($this->supplier->structure))->parse($path);
+        return (new Xml($this->supplier))->parse($path);
     }
 }

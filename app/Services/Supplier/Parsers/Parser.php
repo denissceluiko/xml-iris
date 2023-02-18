@@ -2,11 +2,13 @@
 
 namespace App\Services\Supplier\Parsers;
 
+use App\Models\Supplier;
+
 abstract class Parser
 {
-    protected array $rules;
+    protected Supplier $supplier;
 
-    abstract protected function __construct(array $rules);
+    abstract protected function __construct(Supplier $supplier);
 
     abstract protected function parse(string $data) : array;
 }

@@ -2,19 +2,20 @@
 
 namespace App\Services\Supplier\Parsers;
 
+use App\Models\Supplier;
 use Illuminate\Support\Facades\Storage;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Service;
 
 class Xml extends Parser
 {
-    protected array $rules;
+    protected Supplier $supplier;
     protected string $namespace;
 
-    public function __construct(array $rules, string $namespace = '')
+    public function __construct(Supplier $supplier)
     {
-        $this->rules = $rules;
-        $this->namespace = $namespace;
+        $this->supplier = $supplier;
+        $this->namespace = $supplier->config['xmlns'] ?? '';
     }
 
     public function parse(string $path) : array
@@ -27,7 +28,7 @@ class Xml extends Parser
 
     protected function generateElementMap() : array
     {
-        return  $this->resolveFields($this->rules);
+        return  $this->resolveFields($this->supplier->structure);
     }
 
     /**

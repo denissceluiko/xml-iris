@@ -2,11 +2,10 @@
 
 namespace Tests\Feature\Service\Supplier\Parsers;
 
+use App\Models\Supplier;
 use App\Services\Supplier\Parsers\Xml;
-use Illuminate\Contracts\Cache\Store;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\CopyToImportDisk;
 
@@ -38,24 +37,33 @@ class XmlTest extends TestCase
     public function can_parse_simple_supplier()
     {
 
-        $parser = new Xml([
-            "products" => [
-                "type" => "repeatingElements",
-                "child" => "product",
-                "value" => [
-                    "product" => [
-                        "type" => "keyValue",
-                        "value" => [
-                            "ean" => "string",
-                            "name" => "string",
-                            "stock" => "integer",
-                            "currency" => "currencyCode",
-                            "price" => "float"
-                        ]
-                    ]
-                ]
-            ]
-        ], '');
+        $supplier = Supplier::factory()
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                        ])
+                        ->structure([
+                            "products" => [
+                                "type" => "repeatingElements",
+                                "child" => "product",
+                                "value" => [
+                                    "product" => [
+                                        "type" => "keyValue",
+                                        "value" => [
+                                            "ean" => "string",
+                                            "name" => "string",
+                                            "stock" => "integer",
+                                            "currency" => "currencyCode",
+                                            "price" => "float"
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ])
+                        ->create();
+
+        $parser = new Xml($supplier, '');
 
         $result = $parser->parse($this->copyToImport('supplier_import_simple.xml'));
 
@@ -102,31 +110,40 @@ class XmlTest extends TestCase
      */
     public function can_parse_simple_supplier_non_root()
     {
-        $parser = new Xml([
-            "supplier" => [
-                "type" => "keyValue",
-                "value" => [
-                    "title" => "string",
-                    "link" => "url",
-                    "products" => [
-                        "type" => "repeatingElements",
-                        "child" => "product",
-                        "value" => [
-                            "product" => [
+        $supplier = Supplier::factory()
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                        ])
+                        ->structure([
+                            "supplier" => [
                                 "type" => "keyValue",
                                 "value" => [
-                                    "ean" => "string",
-                                    "name" => "string",
-                                    "stock" => "integer",
-                                    "currency" => "currencyCode",
-                                    "price" => "float"
+                                    "title" => "string",
+                                    "link" => "url",
+                                    "products" => [
+                                        "type" => "repeatingElements",
+                                        "child" => "product",
+                                        "value" => [
+                                            "product" => [
+                                                "type" => "keyValue",
+                                                "value" => [
+                                                    "ean" => "string",
+                                                    "name" => "string",
+                                                    "stock" => "integer",
+                                                    "currency" => "currencyCode",
+                                                    "price" => "float"
+                                                ]
+                                            ]
+                                        ]
+                                    ]
                                 ]
                             ]
-                        ]
-                    ]
-                ]
-            ]
-        ], '');
+                        ])
+                        ->create();
+
+        $parser = new Xml($supplier, '');
 
         $result = $parser->parse($this->copyToImport('supplier_import_simple_non_root.xml'));
 
@@ -189,37 +206,45 @@ class XmlTest extends TestCase
      */
     public function can_parse_simple_supplier_with_nested_elements()
     {
-
-        $parser = new Xml([
-            "products" => [
-                "type" => "repeatingElements",
-                "child" => "product",
-                "value" => [
-                    "product" => [
-                        "type" => "keyValue",
-                        "value" => [
-                            "ean" => "string",
-                            "name" => "string",
-                            "stock" => "integer",
-                            "currency" => "currencyCode",
-                            "price_data" => [
-                                "type" => "keyValue",
-                                "value" => [
-                                    "currency" => "currency",
-                                    "price" => "float",
-                                ],
-                            ],
-                            "images" => [
+        $supplier = Supplier::factory()
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                        ])
+                        ->structure([
+                            "products" => [
                                 "type" => "repeatingElements",
-                                "child" => "image",
-                                "value" => "uri",
-                                "attributes" => [],
-                            ],
-                        ]
-                    ]
-                ]
-            ]
-        ], '');
+                                "child" => "product",
+                                "value" => [
+                                    "product" => [
+                                        "type" => "keyValue",
+                                        "value" => [
+                                            "ean" => "string",
+                                            "name" => "string",
+                                            "stock" => "integer",
+                                            "currency" => "currencyCode",
+                                            "price_data" => [
+                                                "type" => "keyValue",
+                                                "value" => [
+                                                    "currency" => "currency",
+                                                    "price" => "float",
+                                                ],
+                                            ],
+                                            "images" => [
+                                                "type" => "repeatingElements",
+                                                "child" => "image",
+                                                "value" => "uri",
+                                                "attributes" => [],
+                                            ],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ])
+                        ->create();
+
+        $parser = new Xml($supplier, '');
 
         $result = $parser->parse($this->copyToImport('supplier_import_nested.xml'));
 
@@ -296,49 +321,57 @@ class XmlTest extends TestCase
      */
     public function can_parse_simple_supplier_with_nested_elements_and_attributes()
     {
-
-        $parser = new Xml([
-            "products" => [
-                "type" => "repeatingElements",
-                "child" => "product",
-                "value" => [
-                    "product" => [
-                        "type" => "keyValue",
-                        "value" => [
-                            "ean" => "string",
-                            "name" => [
-                                "type" => "string",
-                                "attributes" => [
-                                    "lang" => "languageCode"
-                                ],
-                            ],
-                            "stock" => "integer",
-                            "currency" => "currencyCode",
-                            "price_data" => [
-                                "type" => "keyValue",
-                                "value" => [
-                                    "currency" => [
-                                        "type" => "currency",
-                                        "attributes" => [
-                                            "code" => "currency"
-                                        ],
-                                    ],
-                                    "price" => "float",
-                                ],
-                            ],
-                            "images" => [
+        $supplier = Supplier::factory()
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                        ])
+                        ->structure([
+                            "products" => [
                                 "type" => "repeatingElements",
-                                "child" => "image",
-                                "value" => "uri",
-                                "attributes" => [
-                                    "src" => "url",
-                                ],
-                            ],
-                        ]
-                    ]
-                ]
-            ]
-        ], '');
+                                "child" => "product",
+                                "value" => [
+                                    "product" => [
+                                        "type" => "keyValue",
+                                        "value" => [
+                                            "ean" => "string",
+                                            "name" => [
+                                                "type" => "string",
+                                                "attributes" => [
+                                                    "lang" => "languageCode"
+                                                ],
+                                            ],
+                                            "stock" => "integer",
+                                            "currency" => "currencyCode",
+                                            "price_data" => [
+                                                "type" => "keyValue",
+                                                "value" => [
+                                                    "currency" => [
+                                                        "type" => "currency",
+                                                        "attributes" => [
+                                                            "code" => "currency"
+                                                        ],
+                                                    ],
+                                                    "price" => "float",
+                                                ],
+                                            ],
+                                            "images" => [
+                                                "type" => "repeatingElements",
+                                                "child" => "image",
+                                                "value" => "uri",
+                                                "attributes" => [
+                                                    "src" => "url",
+                                                ],
+                                            ],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ])
+                        ->create();
+
+        $parser = new Xml($supplier, '');
 
         $result = $parser->parse($this->copyToImport('supplier_import_nested_with_attributes.xml'));
 
