@@ -13,6 +13,7 @@
         "laravel/nova": "*",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
+        "maatwebsite/excel": "^3.1",
         "sabre/xml": "^4.0"
     },
     "require-dev": {

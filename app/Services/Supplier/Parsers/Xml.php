@@ -23,7 +23,8 @@ class Xml extends Parser
         $service = new Service();
         $service->elementMap = $this->generateElementMap();
 
-        return $service->parse(Storage::disk('import')->get($path));
+        $parsed = $service->parse(Storage::disk('import')->get($path));
+        return $this->getProductsList($parsed);
     }
 
     protected function generateElementMap() : array
@@ -146,5 +147,18 @@ class Xml extends Parser
     protected function xmlns(string $selector = '') : string
     {
         return '{'.$this->namespace.'}'.$selector;
+    }
+
+    /**
+     * Simplified extractor in case root tag is not the product container
+     *
+     * @param array $xmlArray
+     * @return array
+     */
+    protected function getProductsList(array &$xmlArray) : array
+    {
+        return  isset($xmlArray[$this->supplier->config['root_tag']])
+                    ? $xmlArray[$this->supplier->config['root_tag']]['value']
+                    : $xmlArray;
     }
 }

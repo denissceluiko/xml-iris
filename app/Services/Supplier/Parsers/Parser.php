@@ -10,5 +10,5 @@ abstract class Parser
 
     abstract protected function __construct(Supplier $supplier);
 
-    abstract protected function parse(string $data) : array;
+    abstract protected function parse(string $path) : array;
 }

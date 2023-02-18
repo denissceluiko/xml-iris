@@ -3,14 +3,16 @@
 namespace Tests\Feature\Jobs;
 
 use App\Jobs\SupplierPull;
+use App\Models\Product;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use Tests\Traits\ProductToolkit;
 
 class SupplierPullTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, ProductToolkit;
 
     public function setUp() : void
     {
@@ -61,6 +63,9 @@ class SupplierPullTest extends TestCase
             'ean' => '0000000000000',
             'supplier_id' => $supplier->id,
         ]);
+
+        $product = Product::first();
+        $this->assertTrue($this->isProductArray([$product->values]));
     }
 
     /**

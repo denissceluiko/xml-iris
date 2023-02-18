@@ -38,6 +38,7 @@ class XmlTest extends TestCase
     {
 
         $supplier = Supplier::factory()
+                        ->uri('supplier_import_simple.xml')
                         ->config([
                             'root_tag' => 'products',
                             'product_tag' => 'product',
@@ -63,9 +64,9 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new Xml($supplier, '');
+        $parser = new Xml($supplier);
 
-        $result = $parser->parse($this->copyToImport('supplier_import_simple.xml'));
+        $result = $parser->parse($this->copyToImport($supplier->uri));
 
         $this->assertEquals(
         [
@@ -143,24 +144,11 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new Xml($supplier, '');
+        $parser = new Xml($supplier);
 
         $result = $parser->parse($this->copyToImport('supplier_import_simple_non_root.xml'));
 
         $this->assertEquals([
-            "title" => [
-              "name" => "{}title",
-              "value" => "Supplier name",
-              "attributes" => [],
-            ],
-            "link" => [
-              "name" => "{}link",
-              "value" => "https://example.com/export.xml",
-              "attributes" => [],
-            ],
-            "products" => [
-              "name" => "{}products",
-              "value" => [
                 [
                   "name" => "{}product",
                   "value" => [
@@ -192,10 +180,7 @@ class XmlTest extends TestCase
                   ],
                   "attributes" => [],
                 ],
-              ],
-              "attributes" => [],
-            ],
-          ], $result);
+              ], $result);
     }
 
     /**
@@ -244,7 +229,7 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new Xml($supplier, '');
+        $parser = new Xml($supplier);
 
         $result = $parser->parse($this->copyToImport('supplier_import_nested.xml'));
 
@@ -371,7 +356,7 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new Xml($supplier, '');
+        $parser = new Xml($supplier);
 
         $result = $parser->parse($this->copyToImport('supplier_import_nested_with_attributes.xml'));
 

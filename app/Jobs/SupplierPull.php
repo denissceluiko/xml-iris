@@ -61,28 +61,27 @@ class SupplierPull implements ShouldQueue
         $this->log("Data path loaded.");
         $this->log("Memory: ".$this->processPeakMemUsage());
 
-        $supplierData = (new ParseService($this->supplier))->parse($path);
+        $products = (new ParseService($this->supplier))->parse($path);
         $this->log("Data parsed");
-        $this->log("Memory: ".$this->processPeakMemUsage());
-
-        $products = $this->getProductsList((new ParseService($this->supplier))->parse($path));
-        unset($supplierData);
-
         $this->log("Products found: ".count($products));
         $this->log("Memory: ".$this->processPeakMemUsage());
 
         // Divide into batches
         $batch = [];
+        $noEANCount = 0;
 
         foreach ($products as $row)
         {
             $ean = $this->getEAN($row['value']);
-            if (empty($ean)) continue;
+            if (empty($ean)) {
+                $noEANCount++;
+                continue;
+            }
 
             $batch[] = [
                 'ean' => $ean,
                 'supplier_id' => $this->supplier->id,
-                'values' => json_encode($row['value']),
+                'values' => json_encode($row),
             ];
 
             if (count($batch) > 100) {
@@ -96,22 +95,13 @@ class SupplierPull implements ShouldQueue
         $this->log("Products processed");
         $this->log("Memory: ".$this->processPeakMemUsage());
 
+        if ($noEANCount > 0) {
+            $this->log("Products dismissed due to no EAN code: {$noEANCount}");
+        }
+
         // Clean up the imported file
         Storage::disk('import')->delete($path);
         $this->log("Import finished.");
-    }
-
-    /**
-     * Simplified extractor in case root tag is not the product container
-     *
-     * @param array $xmlArray
-     * @return array
-     */
-    protected function getProductsList(array $xmlArray) : array
-    {
-        return  isset($xmlArray[$this->config('root_tag')])
-                    ? $xmlArray[$this->config('root_tag')]['value']
-                    : $xmlArray;
     }
 
     protected function getEAN(array $productRow) : string

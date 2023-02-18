@@ -11,6 +11,8 @@ class ProcessedProduct extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['extracted_data', 'transformed_data'];
+
     protected $casts = [
         'extracted_data' => 'array',
         'transformed_data' => 'array',

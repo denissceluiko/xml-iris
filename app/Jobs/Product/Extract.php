@@ -38,7 +38,9 @@ class Extract implements ShouldQueue
         if ( $this->batch()->canceled() ) return;
 
         $extractor = new ExtractorService($this->product->processor->mappings);
-        $this->product->extracted_data = $extractor->extract($this->product->product->values);
-        $this->product->setStale("transformed")->save();
+
+        $this->product->setStale("transformed")->update([
+            'extracted_data' => $extractor->extract($this->product->product->values),
+        ]);
     }
 }

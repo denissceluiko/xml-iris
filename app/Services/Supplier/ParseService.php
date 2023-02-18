@@ -3,7 +3,9 @@
 namespace App\Services\Supplier;
 
 use App\Models\Supplier;
+use App\Services\Supplier\Parsers\Excel;
 use App\Services\Supplier\Parsers\Xml;
+use Illuminate\Support\Facades\Log;
 
 class ParseService
 {
@@ -14,7 +16,14 @@ class ParseService
         $this->supplier = $supplier;
     }
 
-    public function parse(string $path) : array
+    /**
+     * Returns an array of products
+     *
+     * @param string $path
+     * @param boolean $returnAsList
+     * @return array|null
+     */
+    public function parse(string $path) : array|null
     {
         $parser = $this->determineParser();
 
@@ -22,7 +31,13 @@ class ParseService
             return $this->xml($path);
         }
 
-        return [];
+        if ($parser == 'excel') {
+            return $this->excel($path);
+        }
+
+        Log::channel('import')->error("No parser found.");
+
+        return null;
     }
 
     protected function determineParser() : string|null
@@ -31,11 +46,20 @@ class ParseService
             return 'xml';
         }
 
+        if ($this->supplier->getSourceType() == 'excel') {
+            return 'excel';
+        }
+
         return null;
     }
 
-    protected function xml(string $path)
+    protected function xml(string $path) : array
     {
         return (new Xml($this->supplier))->parse($path);
+    }
+
+    protected function excel(string $path) : array
+    {
+        return (new Excel($this->supplier))->parse($path);
     }
 }

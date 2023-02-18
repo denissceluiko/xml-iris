@@ -38,7 +38,9 @@ class Transform implements ShouldQueue
         if ( $this->batch()->canceled() ) return;
 
         $transformer = new TransformerService($this->product->processor->transformations, $this->product->processor->compiler->fields, $this->product->extracted_data);
-        $this->product->transformed_data = $transformer->transform();
-        $this->product->setStale("fresh")->save();
+
+        $this->product->setStale("fresh")->update([
+            'transformed_data' => $transformer->transform(),
+        ]);
     }
 }
