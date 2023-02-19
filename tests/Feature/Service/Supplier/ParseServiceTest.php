@@ -4,12 +4,12 @@ namespace Tests\Feature\Service\Supplier;
 
 use App\Models\Supplier;
 use App\Services\Supplier\ParseService;
+use App\Traits\ProductToolkit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\CopyToImportDisk;
-use Tests\Traits\ProductToolkit;
 
 class ParseServiceTest extends TestCase
 {

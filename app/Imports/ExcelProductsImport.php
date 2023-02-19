@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 
 
-class ProductsImport implements WithHeadingRow, SkipsEmptyRows, WithCalculatedFormulas, WithColumnLimit
+class ExcelProductsImport implements WithHeadingRow, SkipsEmptyRows, WithCalculatedFormulas, WithColumnLimit
 {
     protected int $columns;
 

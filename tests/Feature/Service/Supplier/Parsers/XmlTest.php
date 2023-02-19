@@ -3,7 +3,7 @@
 namespace Tests\Feature\Service\Supplier\Parsers;
 
 use App\Models\Supplier;
-use App\Services\Supplier\Parsers\Xml;
+use App\Services\Supplier\Parsers\XmlParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -64,7 +64,7 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new Xml($supplier);
+        $parser = new XmlParser($supplier);
 
         $result = $parser->parse($this->copyToImport($supplier->uri));
 
@@ -144,7 +144,7 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new Xml($supplier);
+        $parser = new XmlParser($supplier);
 
         $result = $parser->parse($this->copyToImport('supplier_import_simple_non_root.xml'));
 
@@ -229,7 +229,7 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new Xml($supplier);
+        $parser = new XmlParser($supplier);
 
         $result = $parser->parse($this->copyToImport('supplier_import_nested.xml'));
 
@@ -356,7 +356,7 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new Xml($supplier);
+        $parser = new XmlParser($supplier);
 
         $result = $parser->parse($this->copyToImport('supplier_import_nested_with_attributes.xml'));
 

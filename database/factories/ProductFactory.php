@@ -21,15 +21,22 @@ class ProductFactory extends Factory
             'ean' => fake()->ean13(),
             'supplier_id' => Supplier::factory(),
             'values' => function ($attributes) {
-                return $this->generateValues($this->extractProductStructure(Supplier::find($attributes['supplier_id'])));
+                return $this->generateValues(Supplier::find($attributes['supplier_id']));
             },
         ];
     }
 
-    public function supplier($supplier)
+    public function supplier(Supplier $supplier)
     {
         return $this->state(function (array $attributes) use ($supplier) {
             return ['supplier_id' => $supplier];
+        });
+    }
+
+    public function values(array $values)
+    {
+        return $this->state(function (array $attributes) use ($values) {
+            return ['values' => $values];
         });
     }
 
@@ -46,15 +53,18 @@ class ProductFactory extends Factory
      * @param array $except
      * @return self
      */
-    protected function generateValues(array $rules) : array
+    protected function generateValues(Supplier $supplier) : array
     {
         $fields = [];
 
+        $rules = $this->extractProductStructure($supplier);
+
         foreach ($rules['value'] as $key => $rule) {
-            $fields[$key] = $this->generateField($key, $rule);
+            $fields[] = $this->generateField($key, $rule);
         }
 
         return [
+            'name' => '{}'.$supplier->config['product_tag'],
             'attributes' => $this->generateAttributes($rules['attributes'] ?? []),
             'value' => $fields
         ];
@@ -98,7 +108,7 @@ class ProductFactory extends Factory
 
         if ($rule['type'] == "keyValue" && isset($rule['value'])) {
             foreach ($rule['fields'] as $key => $field) {
-                $fields[$key] = $this->generateField($key, $field['value'], $field['attributes']);
+                $fields[] = $this->generateField($key, $field['value'], $field['attributes']);
             }
         } else if ($rule['type'] == "repeatingElements" && isset($rule['value'])) {
             foreach($rule['value'] as $key => $element) {

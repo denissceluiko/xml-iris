@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Service;
 
-class Xml extends Parser
+class XmlParser extends Parser
 {
     protected Supplier $supplier;
     protected string $namespace;

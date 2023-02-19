@@ -3,7 +3,7 @@
 namespace Tests\Feature\Service\Supplier\Parsers;
 
 use App\Models\Supplier;
-use App\Services\Supplier\Parsers\Excel;
+use App\Services\Supplier\Parsers\ExcelParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -46,7 +46,7 @@ class ExcelTest extends TestCase
           ])
         ->create();
 
-    $parser = new Excel($supplier);
+    $parser = new ExcelParser($supplier);
 
     $result = $parser->parse($this->copyToImport('supplier_import_simple.xlsx'));
 

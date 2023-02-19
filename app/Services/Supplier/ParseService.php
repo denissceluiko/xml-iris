@@ -3,8 +3,8 @@
 namespace App\Services\Supplier;
 
 use App\Models\Supplier;
-use App\Services\Supplier\Parsers\Excel;
-use App\Services\Supplier\Parsers\Xml;
+use App\Services\Supplier\Parsers\ExcelParser;
+use App\Services\Supplier\Parsers\XmlParser;
 use Illuminate\Support\Facades\Log;
 
 class ParseService
@@ -55,11 +55,11 @@ class ParseService
 
     protected function xml(string $path) : array
     {
-        return (new Xml($this->supplier))->parse($path);
+        return (new XmlParser($this->supplier))->parse($path);
     }
 
     protected function excel(string $path) : array
     {
-        return (new Excel($this->supplier))->parse($path);
+        return (new ExcelParser($this->supplier))->parse($path);
     }
 }

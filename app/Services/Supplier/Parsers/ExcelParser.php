@@ -2,12 +2,12 @@
 
 namespace App\Services\Supplier\Parsers;
 
-use App\Imports\ProductsImport;
+use App\Imports\ExcelProductsImport;
 use App\Models\Supplier;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel as ExcelService;
+use Maatwebsite\Excel\Facades\Excel;
 
-class Excel extends Parser
+class ExcelParser extends Parser
 {
     protected Supplier $supplier;
     protected string $namespace;
@@ -19,8 +19,8 @@ class Excel extends Parser
 
     public function parse(string $path) : array
     {
-        $productRows = ExcelService::toArray(
-            new ProductsImport(count($this->supplier->structure)),
+        $productRows = Excel::toArray(
+            new ExcelProductsImport(count($this->supplier->structure)),
             $path,
             'import'
         );

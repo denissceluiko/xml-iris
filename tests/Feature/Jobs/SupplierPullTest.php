@@ -5,10 +5,10 @@ namespace Tests\Feature\Jobs;
 use App\Jobs\SupplierPull;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Traits\ProductToolkit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
-use Tests\Traits\ProductToolkit;
 
 class SupplierPullTest extends TestCase
 {
