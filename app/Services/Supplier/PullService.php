@@ -37,7 +37,7 @@ class PullService
         }
 
         if ($response->ok()) {
-            $name = date('d.m.Y.H.i.s')."-{$this->supplier->id}.import";
+            $name = sha1(microtime().$this->supplier->id);
             Storage::disk('import')->put($name, $response->body());
         } else {
             Log::channel('import')->warning("Response: ".$response->status());

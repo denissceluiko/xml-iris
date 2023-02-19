@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Jobs\Supplier;
 
-use App\Imports\ExcelProductsImport;
 use App\Jobs\Supplier\ParseJob;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;

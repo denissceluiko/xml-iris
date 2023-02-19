@@ -3,6 +3,7 @@
 namespace App\Services\Supplier\Parsers;
 
 use App\Imports\ExcelProductsImport;
+use App\Jobs\Supplier\CleanupJob;
 use App\Models\Supplier;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -19,11 +20,10 @@ class ExcelParser extends Parser
 
     public function parse() : void
     {
-        Excel::import(new ExcelProductsImport(
-                $this->supplier,
-                count($this->supplier->structure)
-            ),
-            $this->path
-        );
+        Excel::import(new ExcelProductsImport($this->supplier), $this->path, null, \Maatwebsite\Excel\Excel::XLSX)
+        ->chain([
+            new CleanupJob($this->path),
+        ]);
+
     }
 }

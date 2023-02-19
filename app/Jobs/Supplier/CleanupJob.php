@@ -13,14 +13,16 @@ class CleanupJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected string $path;
+    
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(string $path)
     {
-        //
+        $this->path = $path;
     }
 
     /**
@@ -30,6 +32,8 @@ class CleanupJob implements ShouldQueue
      */
     public function handle()
     {
-        //
+        if (file_exists($this->path)) {
+            unlink($this->path);
+        }
     }
 }

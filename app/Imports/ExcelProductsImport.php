@@ -23,10 +23,10 @@ class ExcelProductsImport implements ToCollection, ShouldQueue, WithChunkReading
     protected Supplier $supplier;
     protected int $columns;
 
-    public function __construct(Supplier $supplier, int $columns)
+    public function __construct(Supplier $supplier)
     {
         $this->supplier = $supplier;
-        $this->columns = $columns;
+        $this->columns = count($supplier->structure);
         HeadingRowFormatter::default('none');
     }
 
