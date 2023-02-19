@@ -3,6 +3,7 @@
 namespace App\Services\Supplier;
 
 use App\Models\Supplier;
+use App\Services\Supplier\Parsers\Parser;
 use App\Services\Supplier\Parsers\ExcelParser;
 use App\Services\Supplier\Parsers\XmlParser;
 use Illuminate\Support\Facades\Log;
@@ -10,29 +11,29 @@ use Illuminate\Support\Facades\Log;
 class ParseService
 {
     protected Supplier $supplier;
+    protected string $path;
 
-    public function __construct(Supplier $supplier)
+    public function __construct(Supplier $supplier, string $path)
     {
         $this->supplier = $supplier;
+        $this->path = $path;
     }
 
     /**
-     * Returns an array of products
+     * Returns an appropriate parser
      *
-     * @param string $path
-     * @param boolean $returnAsList
-     * @return array|null
+     * @return Parser|null
      */
-    public function parse(string $path) : array|null
+    public function getParser() : ?Parser
     {
         $parser = $this->determineParser();
 
         if ($parser == 'xml') {
-            return $this->xml($path);
+            return $this->xml();
         }
 
         if ($parser == 'excel') {
-            return $this->excel($path);
+            return $this->excel();
         }
 
         Log::channel('import')->error("No parser found.");
@@ -40,7 +41,7 @@ class ParseService
         return null;
     }
 
-    protected function determineParser() : string|null
+    protected function determineParser() : ?string
     {
         if ($this->supplier->getSourceType() == 'xml') {
             return 'xml';
@@ -53,13 +54,13 @@ class ParseService
         return null;
     }
 
-    protected function xml(string $path) : array
+    protected function xml() : XmlParser
     {
-        return (new XmlParser($this->supplier))->parse($path);
+        return new XmlParser($this->supplier, $this->path);
     }
 
-    protected function excel(string $path) : array
+    protected function excel() : ExcelParser
     {
-        return (new ExcelParser($this->supplier))->parse($path);
+        return new ExcelParser($this->supplier, $this->path);
     }
 }

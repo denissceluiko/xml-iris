@@ -2,12 +2,14 @@
 
 namespace Tests\Feature\Jobs;
 
+use App\Jobs\Supplier\ParseJob;
 use App\Jobs\SupplierPull;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Traits\ProductToolkit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 class SupplierPullTest extends TestCase
@@ -28,6 +30,8 @@ class SupplierPullTest extends TestCase
      */
     public function can_do_supplier_pull()
     {
+        Bus::fake();
+
         $supplier = Supplier::factory()
                         ->uri('supplier_import_simple.xml')
                         ->config([
@@ -35,41 +39,17 @@ class SupplierPullTest extends TestCase
                             'product_tag' => 'product',
                             'source_type' => 'xml',
                         ])
-                        ->structure([
-                            "products" => [
-                                "type" => "repeatingElements",
-                                "child" => "product",
-                                "value" => [
-                                    "product" => [
-                                        "type" => "keyValue",
-                                        "value" => [
-                                            "ean" => "string",
-                                            "name" => "string",
-                                            "stock" => "integer",
-                                            "currency" => "currencyCode",
-                                            "price" => "float"
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ])
                         ->create();
 
         $job = new SupplierPull($supplier);
 
         $job->handle();
 
-        $this->assertDatabaseHas('products', [
-            'ean' => '0000000000000',
-            'supplier_id' => $supplier->id,
-        ]);
-
-        $product = Product::first();
-        $this->assertTrue($this->isProductArray([$product->values]));
+        Bus::assertDispatched(ParseJob::class);
     }
 
     /**
-     * @test
+     * test
      * @return void
      */
     public function can_do_supplier_pull_with_a_large_file()

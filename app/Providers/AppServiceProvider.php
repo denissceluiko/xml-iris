@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,8 +25,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if(config('app.env') == 'production') {
+        // Workaraound for them folks behind a reverse proxy
+        if (config('app.env') == 'production') {
             URL::forceScheme('https');
         }
+
+        HeadingRowFormatter::default('none');
     }
 }

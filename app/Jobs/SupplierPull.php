@@ -2,10 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Supplier\ParseJob;
 use App\Models\Product;
 use App\Models\Supplier;
-use App\Services\Supplier\ParseService;
 use App\Services\Supplier\PullService;
+use App\Traits\ChonkMeter;
 use Illuminate\Bus\Batch;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,12 +15,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class SupplierPull implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
     public $supplier;
 
@@ -48,7 +48,7 @@ class SupplierPull implements ShouldQueue
     public function handle()
     {
         $this->log("Starting import");
-        $this->log("Memory: ".$this->processPeakMemUsage());
+        $this->logChonk();
 
         // Pull XML
         $path = (new PullService($this->supplier))->pull();
@@ -59,87 +59,15 @@ class SupplierPull implements ShouldQueue
         }
 
         $this->log("Data path loaded.");
-        $this->log("Memory: ".$this->processPeakMemUsage());
+        $this->logChonk();
 
-        $products = (new ParseService($this->supplier))->parse($path);
-        $this->log("Data parsed");
-        $this->log("Products found: ".count($products));
-        $this->log("Memory: ".$this->processPeakMemUsage());
-
-        // Divide into batches
-        $batch = [];
-        $noEANCount = 0;
-
-        foreach ($products as $row)
-        {
-            $ean = $this->getEAN($row['value']);
-            if (empty($ean)) {
-                $noEANCount++;
-                continue;
-            }
-
-            $batch[] = [
-                'ean' => $ean,
-                'supplier_id' => $this->supplier->id,
-                'values' => json_encode($row),
-            ];
-
-            if (count($batch) > 100) {
-                $this->upsert($batch);
-                $batch = [];
-            }
-        }
-
-        $this->upsert($batch);
-
-        $this->log("Products processed");
-        $this->log("Memory: ".$this->processPeakMemUsage());
-
-        if ($noEANCount > 0) {
-            $this->log("Products dismissed due to no EAN code: {$noEANCount}");
-        }
-
-        // Clean up the imported file
-        Storage::disk('import')->delete($path);
-        $this->log("Import finished.");
+        ParseJob::dispatch($this->supplier, $path);
     }
 
-    protected function getEAN(array $productRow) : string
-    {
-        foreach ($productRow as $field) {
-            if ($field['name'] == "{}ean") {
-                return $field['value'] ?? '';
-            }
-        }
-        return '';
-    }
-
-    protected function upsert(array $chunk) : void
-    {
-        Product::upsert($chunk, ['supplier_id', 'ean'], ['values']);
-    }
-
-    protected function config(string $key) : string
-    {
-        return $this->supplier->config[$key] ?? '';
-    }
 
     protected function log(string $message)
     {
         Log::channel('import')->info("[Supplier:\t{$this->supplier->id}] $message");
     }
 
-    //memcheck.php
-    /**
-     * Gets peak memory usage of a process in KiB from /proc.../status.
-     *
-     * @return int|bool VmPeak, value in KiB. False if data could not be found.
-     */
-    protected function processPeakMemUsage()
-    {
-        $status = file_get_contents('/proc/' . getmypid() . '/status');
-        $matches = array();
-        preg_match_all('/^(VmPeak):\s*([0-9]+).*$/im', $status, $matches);
-        return !isset($matches[2][0]) ? false : intval($matches[2][0]);
-    }
 }

@@ -7,26 +7,33 @@ use Illuminate\Support\Facades\Storage;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Service;
 
-class XmlParser extends Parser
+class XmlHybrid extends Parser
 {
     protected Supplier $supplier;
     protected string $namespace;
-    protected string $path;
 
-    public function __construct(Supplier $supplier, string $path)
+    public function __construct(Supplier $supplier)
     {
         $this->supplier = $supplier;
         $this->namespace = $supplier->config['xmlns'] ?? '';
-        $this->path = $path;
     }
 
-    public function parse() : void
+    /**
+     * Instructions for morning Deniss
+     *
+     * This class should use XmlReader to get down to the product list and
+     * be able to yield a product parsed by Sabre XML
+     *
+     */
+
+
+
+    public function parse(string $path) : array
     {
         $service = new Service();
         $service->elementMap = $this->generateElementMap();
 
-        $parsed = $service->parse($this->path);
-        // return $this->getProductsList($parsed);
+        return $service->parse(Storage::disk('import')->get($path));
     }
 
     protected function generateElementMap() : array
@@ -149,18 +156,5 @@ class XmlParser extends Parser
     protected function xmlns(string $selector = '') : string
     {
         return '{'.$this->namespace.'}'.$selector;
-    }
-
-    /**
-     * Simplified extractor in case root tag is not the product container
-     *
-     * @param array $xmlArray
-     * @return array
-     */
-    protected function getProductsList(array &$xmlArray) : array
-    {
-        return  isset($xmlArray[$this->supplier->config['root_tag']])
-                    ? $xmlArray[$this->supplier->config['root_tag']]['value']
-                    : $xmlArray;
     }
 }

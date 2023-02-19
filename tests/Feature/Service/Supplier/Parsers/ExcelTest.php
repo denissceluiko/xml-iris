@@ -6,6 +6,7 @@ use App\Models\Supplier;
 use App\Services\Supplier\Parsers\ExcelParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 use Tests\Traits\CopyToImportDisk;
 
@@ -21,12 +22,21 @@ class ExcelTest extends TestCase
         config()->set('filesystems.disks.import.root', base_path('tests/data/import'));
     }
 
+    public function tearDown() : void
+    {
+        $this->purgeCopies();
+
+        parent::tearDown();
+    }
+
     /**
      * @test
      * @return void
      */
     public function can_import_an_excel_file()
     {
+        Excel::fake();
+
         $supplier = Supplier::factory()->config([
             'root_tag' => 'none',
             'product_tag' => 'none',
@@ -46,124 +56,12 @@ class ExcelTest extends TestCase
           ])
         ->create();
 
-    $parser = new ExcelParser($supplier);
+    $path = $this->copyToImport('supplier_import_simple.xlsx');
 
-    $result = $parser->parse($this->copyToImport('supplier_import_simple.xlsx'));
+    $parser = new ExcelParser($supplier, $path);
+    $result = $parser->parse();
 
-    $this->assertEquals([
-            [
-                'name' => '{}none',
-                'attributes' => [],
-                'value' => [
-                    [
-                        "name" => "{}sku",
-                        "value" => 7426825373410,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}gtin",
-                        "value" => 7426825373410,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_lt",
-                        "value" => 1,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_after_discount_lt",
-                        "value" => null,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_lv",
-                        "value" => 1,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_after_discount_lv",
-                        "value" => null,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_ee",
-                        "value" => 1,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_after_discount_ee",
-                        "value" => null,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}stock",
-                        "value" => 0,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}delivery_hours",
-                        "value" => 24,
-                        "attributes" => [],
-                    ],
-                ],
-            ],
-            [
-                'name' => '{}none',
-                'attributes' => [],
-                'value' => [
-                    [
-                        "name" => "{}sku",
-                        "value" => 7426825365507,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}gtin",
-                        "value" => 7426825365507,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_lt",
-                        "value" => 3.95,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_after_discount_lt",
-                        "value" => null,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_lv",
-                        "value" => 3.95,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_after_discount_lv",
-                        "value" => null,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_ee",
-                        "value" => 3.95,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}price_after_discount_ee",
-                        "value" => null,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}stock",
-                        "value" => 2,
-                        "attributes" => [],
-                    ],
-                    [
-                        "name" => "{}delivery_hours",
-                        "value" => 24,
-                        "attributes" => [],
-                    ],
-                ]
-            ],
-        ], $result);
+    Excel::assertImported($path);
 
     }
 }
