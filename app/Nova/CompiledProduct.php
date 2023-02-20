@@ -2,29 +2,29 @@
 
 namespace App\Nova;
 
-use App\Models\ProcessedProduct as ModelsProcessedProduct;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Boolean;
+use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
-class ProcessedProduct extends Resource
+class CompiledProduct extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
      * @var string
      */
-    public static $model = \App\Models\ProcessedProduct::class;
+    public static $model = \App\Models\CompiledProduct::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
      *
      * @var string
      */
-    public static $title = 'id';
+    public static $title = 'ean';
 
     /**
      * The columns that should be searched.
@@ -32,7 +32,7 @@ class ProcessedProduct extends Resource
      * @var array
      */
     public static $search = [
-        'id',
+        'id', 'ean'
     ];
 
     public static $displayInNavigation = false;
@@ -47,15 +47,11 @@ class ProcessedProduct extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            BelongsTo::make(__('Product'), 'product'),
-            BelongsTo::make(__('Processor'), 'processor'),
+            BelongsTo::make(__('Compiler'), 'compiler')->readonly(),
+            BelongsTo::make(__('Processed product'), 'processedProduct')->readonly(),
             Text::make(__('EAN'), 'ean')->readonly(),
-            Text::make(__('Staleness'), function() {
-                return ModelsProcessedProduct::$staleness[$this->stale_level];
-            }),
-
-            KeyValue::make(__('Extracted data'), 'extracted_data'),
-            KeyValue::make(__('Transformed data'), 'transformed_data'),
+            Code::make(__('Data'), 'data')->readonly()->json(),
+            Boolean::make(__('Stale'), 'stale_state'),
         ];
     }
 

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Compiler extends Model
 {
@@ -19,7 +20,7 @@ class Compiler extends Model
     {
         return $this->fields;
     }
-    
+
     public function suppliers() : BelongsToMany
     {
         return $this->belongsToMany(Supplier::class)->using(Processor::class);
@@ -28,5 +29,15 @@ class Compiler extends Model
     public function processors() : HasMany
     {
         return $this->hasMany(Processor::class);
+    }
+
+    public function processedProducts() : HasManyThrough
+    {
+        return $this->hasManyThrough(ProcessedProduct::class, Processor::class);
+    }
+
+    public function compiledProducts() : HasMany
+    {
+        return $this->hasMany(CompiledProduct::class);
     }
 }

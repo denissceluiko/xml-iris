@@ -82,7 +82,7 @@ class ExtractorService
 
         if ($this->isAttribute($instruction)) {
             [$attribute, $value] = explode('=', trim($instruction, '[]'));
-            return $this->whereAttribute($attribute, trim($value, '"'), $tree);
+            return $this->whereAttribute($attribute, trim($value, '"\' '), $tree);
         }
 
         return ['value' => null];

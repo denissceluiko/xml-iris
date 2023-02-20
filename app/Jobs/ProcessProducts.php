@@ -63,12 +63,16 @@ class ProcessProducts implements ShouldQueue
 
     public function upsertMissing()
     {
-        $products = $this->processor->supplier->products()->select('id')->get();
+        $products = $this->processor->supplier->products()->select('id', 'ean')->get();
 
         $processorId = $this->processor->id;
 
         $upserts = $products->map(function ($product) use ($processorId) {
-            return ['product_id' => $product->id, 'processor_id' => $processorId];
+            return [
+                'product_id' => $product->id,
+                'ean' => $product->ean,
+                'processor_id' => $processorId
+            ];
         });
 
         ProcessedProduct::upsert($upserts->toArray(), ['product_id', 'processor_id']);

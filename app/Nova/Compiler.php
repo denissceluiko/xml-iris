@@ -2,8 +2,8 @@
 
 namespace App\Nova;
 
+use App\Nova\Actions\CompileProducts;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
@@ -48,7 +48,9 @@ class Compiler extends Resource
             KeyValue::make(__('Fields'), 'fields')->default([
                 'ean' => 'string'
             ])->keyLabel(__('Field'))->valueLabel(__('Type')),
+            Text::make(__('Rules'), 'rules')->hideFromIndex(),
             HasMany::make(__('Processors')),
+            HasMany::make(__('Compiled products'), 'compiledProducts'),
         ];
     }
 
@@ -93,6 +95,8 @@ class Compiler extends Resource
      */
     public function actions(Request $request)
     {
-        return [];
+        return [
+            CompileProducts::make(),
+        ];
     }
 }

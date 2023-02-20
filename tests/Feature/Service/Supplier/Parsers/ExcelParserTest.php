@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 use Tests\Traits\CopyToImportDisk;
 
-class ExcelTest extends TestCase
+class ExcelParserTest extends TestCase
 {
     use RefreshDatabase, CopyToImportDisk;
 

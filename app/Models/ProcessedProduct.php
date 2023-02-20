@@ -41,6 +41,12 @@ class ProcessedProduct extends Model
         $this->stale_level = array_search($level, self::$staleness);
         return $this;
     }
+
+    public function scopeEan(Builder $query, $ean) : Builder
+    {
+        return $query->where('ean', $ean);
+    }
+
     public function scopeStale(Builder $query, $level = 1) : Builder
     {
         return $query->where('stale_level', '>=', $level);

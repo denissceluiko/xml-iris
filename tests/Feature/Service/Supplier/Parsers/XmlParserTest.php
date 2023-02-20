@@ -6,10 +6,11 @@ use App\Models\Supplier;
 use App\Services\Supplier\Parsers\XmlParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\CopyToImportDisk;
 
-class XmlTest extends TestCase
+class XmlParserTest extends TestCase
 {
     use RefreshDatabase, CopyToImportDisk;
 
@@ -64,9 +65,9 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new XmlParser($supplier);
+        $parser = new XmlParser($supplier, Storage::path($supplier->uri));
 
-        $result = $parser->parse($this->copyToImport($supplier->uri));
+        $result = $parser->parse();
 
         $this->assertEquals(
         [
@@ -144,9 +145,9 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new XmlParser($supplier);
+        $parser = new XmlParser($supplier, Storage::path('supplier_import_simple_non_root.xml'));
 
-        $result = $parser->parse($this->copyToImport('supplier_import_simple_non_root.xml'));
+        $result = $parser->parse();
 
         $this->assertEquals([
                 [
@@ -229,9 +230,9 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new XmlParser($supplier);
+        $parser = new XmlParser($supplier, Storage::path('supplier_import_nested.xml'));
 
-        $result = $parser->parse($this->copyToImport('supplier_import_nested.xml'));
+        $result = $parser->parse();
 
         $this->assertEquals(
         [
@@ -356,9 +357,9 @@ class XmlTest extends TestCase
                         ])
                         ->create();
 
-        $parser = new XmlParser($supplier);
+        $parser = new XmlParser($supplier, Storage::path('supplier_import_nested_with_attributes.xml'));
 
-        $result = $parser->parse($this->copyToImport('supplier_import_nested_with_attributes.xml'));
+        $result = $parser->parse();
 
         $this->assertEquals(
         [

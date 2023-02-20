@@ -18,11 +18,19 @@ class CompilerFactory extends Factory
     {
         return [
             'name' => fake()->words(3, true),
+            'rules' => '',
             'fields' => function ($attributes) {
                 return $this->getFields($attributes);
             },
         ];
 
+    }
+
+    public function rules(string $rules) : self
+    {
+        return $this->state(function($attributes) use ($rules) {
+            return ['rules' => $rules];
+        });
     }
 
     public function fields(array $fields) : self

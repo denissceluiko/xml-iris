@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->json('fields');
+            $table->string('rules')->nullable();
             $table->timestamps();
         });
     }

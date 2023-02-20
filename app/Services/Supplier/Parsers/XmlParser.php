@@ -3,7 +3,6 @@
 namespace App\Services\Supplier\Parsers;
 
 use App\Models\Supplier;
-use Illuminate\Support\Facades\Storage;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Service;
 
@@ -25,7 +24,7 @@ class XmlParser extends Parser
         $service = new Service();
         $service->elementMap = $this->generateElementMap();
 
-        $parsed = $service->parse($this->path);
+        $parsed = $service->parse(file_get_contents($this->path));
         // return $this->getProductsList($parsed);
     }
 

@@ -52,7 +52,7 @@ class ParseServiceTest extends TestCase
                         ->create();
 
         $path = $this->copyToImport($supplier->uri);
-        $parsed = (new ParseService($supplier))->parse($path);
+        $parsed = (new ParseService($supplier, $path))->getParser()->parse();
 
         $this->assertTrue($this->isProductArray($parsed));
 
@@ -72,7 +72,7 @@ class ParseServiceTest extends TestCase
                         ])
                         ->structure([
                             "sku" => "sku",
-                            "gtin" => "gtin",
+                            "ean" => "gtin",
                             "price_lt" => "PRICE LT",
                             "price_after_discount_lt" => "Price LT after discount",
                             "price_lv" => "PRICE LV",
@@ -86,10 +86,9 @@ class ParseServiceTest extends TestCase
 
         $path = $this->copyToImport($supplier->uri);
 
-        $parsed = (new ParseService($supplier))->parse($path);
+        (new ParseService($supplier, $path))->getParser()->parse();
 
-        $this->assertCount(2, $parsed);
-        $this->assertTrue($this->isProductArray($parsed));
+        $this->assertDatabaseCount('products', 2);
 
         Storage::disk('import')->delete($path);
     }
@@ -101,17 +100,12 @@ class ParseServiceTest extends TestCase
     public function can_not_parse_random_extension_file()
     {
         $supplier = Supplier::factory()
-                        ->uri('this_file_dies_not_exist.yolo')
+                        ->uri('this_file_can_not_be_parsed.yolo')
                         ->structure([])
                         ->create();
 
-        $path = sha1(date('dmyHis-test'));
-        Storage::disk('import')->put($path, "just some random string");
+        $parser = (new ParseService($supplier, 'this_file_can_not_be_parsed.yolo'))->getParser();
 
-        $parsed = (new ParseService($supplier))->parse($path);
-
-        $this->assertEquals(null, $parsed);
-
-        Storage::disk('import')->delete($path);
+        $this->assertEquals(null, $parser);
     }
 }
