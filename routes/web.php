@@ -1,7 +1,6 @@
 <?php
 
-use App\Http\Controllers\SandboxController;
-use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ExportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +14,4 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::resource('supplier', SupplierController::class);
-Route::get('supplier/{supplier}/pull', [SupplierController::class, 'pull']);
-Route::get('sandbox', [SandboxController::class, 'index']);
+Route::get('export/{export:slug}', [ExportController::class, 'download'])->name('export.download');

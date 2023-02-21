@@ -2,28 +2,30 @@
 
 namespace App\Nova;
 
-use App\Nova\Actions\CompileProducts;
+use App\Nova\Actions\ExportCompiledProducts;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
-use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Http\Requests\NovaRequest;
 
-class Compiler extends Resource
+class Export extends Resource
 {
     /**
      * The model the resource corresponds to.
      *
      * @var string
      */
-    public static $model = \App\Models\Compiler::class;
+    public static $model = \App\Models\Export::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
      *
      * @var string
      */
-    public static $title = 'name';
+    public static $title = 'id';
 
     /**
      * The columns that should be searched.
@@ -31,8 +33,10 @@ class Compiler extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'name'
+        'id',
     ];
+
+    public static $displayInNavigation = false;
 
     /**
      * Get the fields displayed by the resource.
@@ -44,14 +48,16 @@ class Compiler extends Resource
     {
         return [
             ID::make(__('ID'), 'id')->sortable(),
-            Text::make(__('Name'), 'name')->sortable()->rules('required'),
-            KeyValue::make(__('Fields'), 'fields')->default([
-                'ean' => 'string'
-            ])->keyLabel(__('Field'))->valueLabel(__('Type')),
-            Text::make(__('Rules'), 'rules')->hideFromIndex(),
-            HasMany::make(__('Processors')),
-            HasMany::make(__('Exports'), 'exports'),
-            HasMany::make(__('Compiled products'), 'compiledProducts'),
+            BelongsTo::make(__('Compiler'), 'compiler'),
+            Text::make(__('Type'), 'type')->required(),
+            Code::make(__('Config'), 'config')->json()->required(),
+            Code::make(__('Mappings'), 'mappings')->json()->required(),
+            Text::make(__('Path'), 'path')->readonly()->showOnDetail(),
+            Text::make(__('Download link'), function () {
+                $route = route('export.download', $this->slug);
+                return "<a href='{$route}'>{$route}</a>";
+            })->asHtml(),
+            DateTime::make(__('Updated at'), 'updated_at')->readonly()->showOnDetail(),
         ];
     }
 
@@ -97,7 +103,7 @@ class Compiler extends Resource
     public function actions(Request $request)
     {
         return [
-            CompileProducts::make(),
+            ExportCompiledProducts::make(),
         ];
     }
 }

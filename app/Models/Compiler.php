@@ -31,6 +31,11 @@ class Compiler extends Model
         return $this->hasMany(Processor::class);
     }
 
+    public function exports() : HasMany
+    {
+        return $this->hasMany(Export::class);
+    }
+
     public function processedProducts() : HasManyThrough
     {
         return $this->hasManyThrough(ProcessedProduct::class, Processor::class);

@@ -8,7 +8,7 @@ abstract class Parser
 {
     protected Supplier $supplier;
 
-    abstract protected function __construct(Supplier $supplier, string $path);
+    abstract public function __construct(Supplier $supplier, string $path);
 
-    abstract protected function parse() : void;
+    abstract public function parse() : void;
 }
