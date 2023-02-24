@@ -34,7 +34,7 @@ class ParseJobTest extends TestCase
      * @test
      * @return void
      */
-    public function can_route_parse_job_to_appropriate_handler()
+    public function can_route_parse_job_to_excel_handler()
     {
         Excel::fake();
 
@@ -52,5 +52,10 @@ class ParseJobTest extends TestCase
         $job->handle();
 
         Excel::assertQueued(Storage::disk('import')->path($path));
+    }
+
+    public function can_route_parse_job_to_xml_handler()
+    {
+
     }
 }
