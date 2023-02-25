@@ -44,6 +44,42 @@ class ExtractorServiceTest extends TestCase
         ], $extracted);
     }
 
+    /**
+     * @test
+     * @return void
+     */
+    public function can_handle_empty_values()
+    {
+        $extractor = new ExtractorService([
+            'ean' => 'ean',
+            'sku' => '[id]',
+            'eantype' => '',
+        ]);
+
+        $extracted = $extractor->extract([
+            "name" => "{}product",
+            "value" => [
+              [
+                "name" => "{}ean",
+                "value" => "1010110101010",
+                "attributes" => [
+                    "type" => "ean13"
+                ],
+              ],
+            ],
+            "attributes" => [
+              "id" => "101010",
+            ],
+        ]);
+
+
+        $this->assertEquals([
+            'ean' => '1010110101010',
+            'sku' => '101010',
+            'eantype' => ''
+        ], $extracted);
+    }
+
 
     /**
      * @test

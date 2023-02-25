@@ -28,6 +28,8 @@ class ExtractorService
     {
         $path = explode('->', $rule);
 
+        if (empty($path[0])) return null;
+
         foreach($path as $instruction) {
             $tree = $this->execute($instruction, $tree);
         }

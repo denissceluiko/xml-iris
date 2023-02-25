@@ -32,7 +32,7 @@ class FilterService
         return $products->first();
     }
 
-    public function apply(string $rule, Collection &$products)
+    protected function apply(string $rule, Collection &$products)
     {
         $rule = $this->parseRule($rule);
 
@@ -48,7 +48,7 @@ class FilterService
         }
     }
 
-    public function order(Collection &$products, array $args)
+    protected function order(Collection &$products, array $args)
     {
         $products = $products->sort(function ($left, $right) use ($args) {
             if ($args[1] == 'desc')
@@ -59,19 +59,24 @@ class FilterService
 
     }
 
-    public function dropIf(Collection &$products, array $args)
+    protected function dropIf(Collection &$products, array $args)
     {
+        // Souldn't drop the last product
+        if ($products->count() == 1) return;
+
         // filter() filters the collection, keeping only those items that pass a given truth test.
         // So, drop if expression is true.
-        $products = $products->filter(function ($product) use ($args) {
-            // Ignore if can't compare
-            if ( !isset($product->transformed_data[$args[0]]) ) return true;
+        $filtered = $products->filter(function ($product) use ($args) {
+            // Ignore if it's the last product or if can't compare
+            if (!isset($product->transformed_data[$args[0]]) ) return true;
 
             return ! $this->compare($product->transformed_data[$args[0]], $args);
         });
+
+        $products = $filtered->isEmpty() ? Collection::wrap($products->first()) : $filtered;
     }
 
-    public function compare(mixed $value, array $rules) : bool
+    protected function compare(mixed $value, array $rules) : bool
     {
         if ($rules[1] == '=') {
             return $value == $rules[2];
@@ -84,7 +89,7 @@ class FilterService
         return false;
     }
 
-    public function parseRule(string $rule) : ?array
+    protected function parseRule(string $rule) : ?array
     {
         if (!str_ends_with($rule, ')')) {
             return null;

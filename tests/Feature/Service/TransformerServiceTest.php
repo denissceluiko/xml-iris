@@ -37,6 +37,35 @@ class TransformerServiceTest extends TestCase
         ], $result);
     }
 
+        /**
+     * @test
+     * @return void
+     */
+    public function will_round_floats_to_two_precision()
+    {
+        $transformer = new TransformerService([
+            'sku' => 'sku',
+            'price' => 'price',
+            'stock' => 'stock',
+        ], [
+            'sku' => 'string',
+            'price' => 'float',
+            'stock' => 'int',
+        ], [
+            'sku' => '101010',
+            'price' => '0.9469',
+            'stock' => '123',
+        ]);
+
+        $result = $transformer->transform();
+
+        $this->assertEquals([
+            'sku' => '101010',
+            'price' => 0.95,
+            'stock' => 123,
+        ], $result);
+    }
+
     /**
      * @test
      * @return void
@@ -133,7 +162,7 @@ class TransformerServiceTest extends TestCase
         ], $result);
     }
 
-        /**
+    /**
      * @test
      * @return void
      */

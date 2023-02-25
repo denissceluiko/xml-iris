@@ -75,7 +75,9 @@ class ProcessProducts implements ShouldQueue
             ];
         });
 
-        ProcessedProduct::upsert($upserts->toArray(), ['product_id', 'processor_id']);
+        foreach ($upserts->chunk(500) as $chunk) {
+            $this->processor->processedProducts()->upsert($chunk->toArray(), ['product_id']);
+        }
     }
 
     public function transform(ProcessedProduct $product) : Transform

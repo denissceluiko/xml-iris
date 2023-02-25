@@ -76,7 +76,10 @@ class TransformerService
                 $rule = intval($rule);
                 break;
             case 'float':
-                $rule = floatval($rule);
+                $rule = round(floatval($rule), 2);
+                break;
+            case 'string':
+                $rule = strval($rule);
                 break;
         }
 

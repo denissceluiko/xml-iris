@@ -144,6 +144,42 @@ class FilterServiceTest extends TestCase
      * @test
      * @return void
      */
+    public function dropif_rule_can_handle_uncomparable_values()
+    {
+
+        $fields = [
+            'ean' => 'string',
+            'stock' => 'int',
+            'delivery_time' => 'int',
+        ];
+
+        $compiler = Compiler::factory()
+                        ->fields($fields)
+                        ->rules('dropIf("nonexistent_field", "<", "1")')
+                        ->create();
+
+        $processedProducts = ProcessedProduct::factory()
+                                ->count(3)
+                                ->state(new Sequence(
+                                    ['transformed_data' => ['delivery_time' => 12, 'stock' => 0]],
+                                    ['transformed_data' => ['delivery_time' => 24, 'stock' => 43]],
+                                    ['transformed_data' => ['delivery_time' => 24, 'stock' => 15]],
+                                ))
+                                ->make();
+
+        $service = new FilterService($compiler);
+
+        $filtered = $service->filter($processedProducts);
+
+        $this->assertTrue($filtered instanceof ProcessedProduct);
+        $this->assertEquals(0, $filtered->transformed_data['stock']);
+        $this->assertEquals(12, $filtered->transformed_data['delivery_time']);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
     public function can_filter_products_with_compound_rules()
     {
 
@@ -173,5 +209,41 @@ class FilterServiceTest extends TestCase
 
         $this->assertTrue($filtered instanceof ProcessedProduct);
         $this->assertEquals(24, $filtered->transformed_data['stock']);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function will_not_filter_out_the_last_product_in_the_list()
+    {
+
+        $fields = [
+            'ean' => 'string',
+            'stock' => 'int',
+            'delivery_time' => 'int',
+        ];
+
+        $compiler = Compiler::factory()
+                        ->fields($fields)
+                        ->rules('order("delivery_time", "asc")->dropIf("stock", "<", "1")')
+                        ->create();
+
+        $processedProducts = ProcessedProduct::factory()
+                                ->count(3)
+                                ->state(new Sequence(
+                                    ['transformed_data' => ['delivery_time' => 28, 'stock' => 0]],
+                                    ['transformed_data' => ['delivery_time' => 24, 'stock' => 0]],
+                                    ['transformed_data' => ['delivery_time' => 12, 'stock' => 0]],
+                                ))
+                                ->make();
+
+        $service = new FilterService($compiler);
+
+        $filtered = $service->filter($processedProducts);
+
+        $this->assertTrue($filtered instanceof ProcessedProduct);
+        $this->assertEquals(0, $filtered->transformed_data['stock']);
+        $this->assertEquals(12, $filtered->transformed_data['delivery_time']);
     }
 }

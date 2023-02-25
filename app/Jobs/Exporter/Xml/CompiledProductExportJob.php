@@ -33,6 +33,7 @@ class CompiledProductExportJob implements ShouldQueue
         $this->export = $export;
         $this->path = $path;
         $this->disk = $disk;
+        $this->onQueue('long-running-queue');
     }
 
     /**
