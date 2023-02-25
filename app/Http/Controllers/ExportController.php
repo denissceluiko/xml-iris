@@ -11,7 +11,7 @@ class ExportController extends Controller
     public function download(Export $export)
     {
         if (empty($export->path)) {
-            return response()->setStatusCode(204);
+            return response()->noContent();
         }
 
         return Storage::disk('export')->download($export->path, 'export.xml');
