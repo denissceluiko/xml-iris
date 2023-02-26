@@ -6,6 +6,7 @@ use App\Jobs\Product\Extract;
 use App\Jobs\Product\Transform;
 use App\Models\ProcessedProduct;
 use App\Models\Processor;
+use App\Traits\ChonkMeter;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Bus;
 
 class ProcessProducts implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
     public Processor $processor;
 
@@ -45,7 +46,10 @@ class ProcessProducts implements ShouldQueue
     {
         $this->upsertMissing();
 
+        $this->logChonk();
         $products = $this->processor->processedProducts()->select(['id', 'stale_level'])->stale()->get();
+
+        $this->logChonk();
 
         $batch = [];
 
@@ -58,7 +62,9 @@ class ProcessProducts implements ShouldQueue
             }
         }
 
-        Bus::batch($batch)->dispatch();
+        $this->logChonk();
+
+        Bus::batch($batch)->name('Products processing')->dispatch();
     }
 
     public function upsertMissing()
