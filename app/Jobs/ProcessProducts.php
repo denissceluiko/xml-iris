@@ -35,6 +35,7 @@ class ProcessProducts implements ShouldQueue
     public function __construct(Processor $processor)
     {
         $this->processor = $processor->withoutRelations();
+        $this->onQueue('long-running-queue');
     }
 
     /**
