@@ -71,12 +71,11 @@ class ProcessProducts implements ShouldQueue
             return [
                 'product_id' => $product->id,
                 'ean' => $product->ean,
-                'processor_id' => $processorId
             ];
         });
 
         foreach ($upserts->chunk(500) as $chunk) {
-            $this->processor->processedProducts()->upsert($chunk->toArray(), ['product_id']);
+            $this->processor->processedProducts()->upsert($chunk->toArray(), ['product_id', 'ean']);
         }
     }
 
