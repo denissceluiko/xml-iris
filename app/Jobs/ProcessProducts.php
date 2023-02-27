@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Processor\ProcessProductBatch;
 use App\Jobs\Product\Extract;
 use App\Jobs\Product\Transform;
 use App\Models\ProcessedProduct;
@@ -22,7 +23,6 @@ class ProcessProducts implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
     protected Processor $processor;
-    protected PendingBatch $batch;
 
     public function middleware() : array
     {
@@ -52,14 +52,14 @@ class ProcessProducts implements ShouldQueue
         $this->logChonk();
         $count = $this->processor->processedProducts()->stale()->count();
 
-        $this->batch = Bus::batch([])->name('Products processing');
+        $batch = [];
 
         for($i=0; $i<$count; $i+=200)
         {
-            $this->processChunk($i, 200);
+            $batch[] = new ProcessProductBatch($this->processor, $i, 200);
         }
 
-        $this->batch->dispatch();
+        Bus::batch($batch)->name('Product processor master')->dispatch();
     }
 
     public function upsertMissing()
@@ -79,43 +79,5 @@ class ProcessProducts implements ShouldQueue
         foreach ($upserts->chunk(500) as $chunk) {
             $this->processor->processedProducts()->upsert($chunk->toArray(), ['product_id']);
         }
-    }
-
-    protected function processChunk(int $offset, int $count) : void
-    {
-        $products = $this->processor
-                    ->processedProducts()
-                    ->select(['id', 'stale_level'])
-                    ->stale()
-                    ->limit($count)
-                    ->offset($offset)
-                    ->get();
-
-        $batch = [];
-
-        foreach ($products as $product)
-        {
-            if ($product->stale_level == 1) {
-                $batch[] = $this->transform($product);
-            } else {
-                $batch[] = $this->full($product);
-            }
-        }
-
-        $this->batch->add($batch);
-        $this->logChonk();
-    }
-
-    public function transform(ProcessedProduct $product) : Transform
-    {
-        return new Transform($product);
-    }
-
-    public function full(ProcessedProduct $product) : array
-    {
-        return [
-            new Extract($product),
-            new Transform($product),
-        ];
     }
 }
