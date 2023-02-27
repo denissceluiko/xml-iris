@@ -14,6 +14,6 @@ class ExportController extends Controller
             return response()->noContent();
         }
 
-        return Storage::disk('export')->download($export->path, 'export.xml');
+        return response()->file(Storage::disk('export')->path($export->path));
     }
 }
