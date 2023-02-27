@@ -7,6 +7,7 @@ use App\Jobs\Product\Transform;
 use App\Models\ProcessedProduct;
 use App\Models\Processor;
 use App\Traits\ChonkMeter;
+use Illuminate\Bus\PendingBatch;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,7 +21,8 @@ class ProcessProducts implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
-    public Processor $processor;
+    protected Processor $processor;
+    protected PendingBatch $batch;
 
     public function middleware() : array
     {
@@ -48,24 +50,16 @@ class ProcessProducts implements ShouldQueue
         $this->upsertMissing();
 
         $this->logChonk();
-        $products = $this->processor->processedProducts()->select(['id', 'stale_level'])->stale()->get();
+        $count = $this->processor->processedProducts()->stale()->count();
 
-        $this->logChonk();
+        $this->batch = Bus::batch([])->name('Products processing');
 
-        $batch = [];
-
-        foreach ($products as $product)
+        for($i=0; $i<$count; $i+=200)
         {
-            if ($product->stale_level == 1) {
-                $batch[] = $this->transform($product);
-            } else {
-                $batch[] = $this->full($product);
-            }
+            $this->processChunk($i, 200);
         }
 
-        $this->logChonk();
-
-        Bus::batch($batch)->name('Products processing')->dispatch();
+        $this->batch->dispatch();
     }
 
     public function upsertMissing()
@@ -85,6 +79,31 @@ class ProcessProducts implements ShouldQueue
         foreach ($upserts->chunk(500) as $chunk) {
             $this->processor->processedProducts()->upsert($chunk->toArray(), ['product_id']);
         }
+    }
+
+    protected function processChunk(int $offset, int $count) : void
+    {
+        $products = $this->processor
+                    ->processedProducts()
+                    ->select(['id', 'stale_level'])
+                    ->stale()
+                    ->limit($count)
+                    ->offset($offset)
+                    ->get();
+
+        $batch = [];
+
+        foreach ($products as $product)
+        {
+            if ($product->stale_level == 1) {
+                $batch[] = $this->transform($product);
+            } else {
+                $batch[] = $this->full($product);
+            }
+        }
+
+        $this->batch->add($batch);
+        $this->logChonk();
     }
 
     public function transform(ProcessedProduct $product) : Transform
