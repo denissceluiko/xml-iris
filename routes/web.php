@@ -14,4 +14,4 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('export/{export:slug}', [ExportController::class, 'download'])->name('export.download');
+Route::get('export/{export:slug}.xml', [ExportController::class, 'download'])->name('export.download');
