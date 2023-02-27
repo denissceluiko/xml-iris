@@ -40,13 +40,14 @@ class CompileJob implements ShouldQueue
         $this->upsertMissing($processedProducts);
 
         $batch = [];
+        $batchSize = 500;
 
-        foreach ($processedProducts as $product)
+        for ($i=0; $i<$processedProducts->count(); $i+=$batchSize)
         {
-            $batch[] = new FilterJob($this->compiler, $product->ean);
+            $batch[] = new CompileBatchJob($this->compiler, $i, $batchSize);
         }
 
-        Bus::batch($batch)->name('Compile products')->dispatch();
+        Bus::batch($batch)->name('Compile products master')->dispatch();
     }
 
     public function upsertMissing(Collection $EANs)
@@ -60,7 +61,7 @@ class CompileJob implements ShouldQueue
             ];
         });
 
-        foreach ($upserts->chunk(1000) as $chunk) {
+        foreach ($upserts->chunk(500) as $chunk) {
             $this->compiler->compiledProducts()->upsert($chunk->toArray(), ['compiler_id', 'ean']);
         }
     }

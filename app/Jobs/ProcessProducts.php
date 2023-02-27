@@ -54,9 +54,11 @@ class ProcessProducts implements ShouldQueue
 
         $batch = [];
 
-        for($i=0; $i<$count; $i+=200)
+        $batchSize = 500;
+
+        for ($i=0; $i<$count; $i+=$batchSize)
         {
-            $batch[] = new ProcessProductBatch($this->processor, $i, 200);
+            $batch[] = new ProcessProductBatch($this->processor, $i, $batchSize);
         }
 
         Bus::batch($batch)->name('Product processor master')->dispatch();
