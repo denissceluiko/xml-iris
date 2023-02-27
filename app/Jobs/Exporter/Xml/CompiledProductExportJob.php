@@ -54,6 +54,7 @@ class CompiledProductExportJob implements ShouldQueue
         $compiledProductCount = $this->export->compiler->compiledProducts()->count();
 
         $chunkSize = 100;
+        $this->writer->startElement($this->export->config['root_tag']);
 
         for($i=0; $i<$compiledProductCount; $i+=100)
         {
@@ -62,6 +63,7 @@ class CompiledProductExportJob implements ShouldQueue
         }
 
         // Save file
+        $this->writer->endElement();
         $this->writer->endDocument();
         unset($this->writer);
 
@@ -79,13 +81,10 @@ class CompiledProductExportJob implements ShouldQueue
                                 ->limit($chunkSize)
                                 ->get();
 
-        $this->writer->startElement($this->export->config['root_tag']);
-
         foreach ($compiledProducts as $product) {
             $this->writeProduct($product);
         }
 
-        $this->writer->endElement();
         $this->writer->flush();
     }
 
