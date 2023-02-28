@@ -26,7 +26,9 @@ trait ChonkMeter
 
     protected function logChonk($channel = 'import')
     {
-        Log::channel($channel)->info("Memory usage: {$this->getMemory()} / {$this->getPeakMemory()} KiB");
+        if (config('app.env') == 'local') {
+            Log::channel($channel)->info("Memory usage: {$this->getMemory()} / {$this->getPeakMemory()} KiB");
+        }
     }
 
 }
