@@ -41,9 +41,9 @@ class CompileBatchJob implements ShouldQueue
     public function handle()
     {
         $processedProducts = $this->compiler
-                                ->processedProducts()
+                                ->compiledProducts()
                                 ->select('ean')
-                                ->distinct()
+                                ->stale()
                                 ->offset($this->offset)
                                 ->limit($this->count)
                                 ->get();

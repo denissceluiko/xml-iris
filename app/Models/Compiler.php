@@ -21,11 +21,6 @@ class Compiler extends Model
         return $this->fields;
     }
 
-    public function suppliers() : BelongsToMany
-    {
-        return $this->belongsToMany(Supplier::class)->using(Processor::class);
-    }
-
     public function processors() : HasMany
     {
         return $this->hasMany(Processor::class);

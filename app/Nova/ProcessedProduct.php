@@ -32,7 +32,7 @@ class ProcessedProduct extends Resource
      * @var array
      */
     public static $search = [
-        'id',
+        'id', 'ean'
     ];
 
     public static $displayInNavigation = false;

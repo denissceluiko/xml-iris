@@ -38,4 +38,9 @@ class CompiledProduct extends Model
     {
         return $this->belongsTo(Compiler::class);
     }
+
+    public function scopeStale(Builder $query, $level = 0) : Builder
+    {
+        return $query->where('stale_level', '>', $level);
+    }
 }

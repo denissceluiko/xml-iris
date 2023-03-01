@@ -42,5 +42,9 @@ class Transform implements ShouldQueue
         $this->product->setStale("fresh")->update([
             'transformed_data' => $transformer->transform(),
         ]);
+
+        $this->product->compiledProducts()->update([
+            'stale_level' => 1,
+        ]);
     }
 }

@@ -51,7 +51,9 @@ class CompiledProduct extends Resource
             BelongsTo::make(__('Processed product'), 'processedProduct')->readonly(),
             Text::make(__('EAN'), 'ean')->readonly(),
             Code::make(__('Data'), 'data')->readonly()->json(),
-            Boolean::make(__('Stale'), 'stale_state'),
+            Boolean::make(__('Fresh?'), function() {
+                return !$this->stale_level;
+            }),
         ];
     }
 
@@ -98,4 +100,14 @@ class CompiledProduct extends Resource
     {
         return [];
     }
+
+    /**
+    * Get the search result subtitle for the resource.
+    *
+    * @return string
+    */
+   public function subtitle()
+   {
+       return "Compiler: {$this->compiler->name}";
+   }
 }

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+
 
 class Processor extends Model
 {
@@ -34,13 +36,20 @@ class Processor extends Model
         return $this->hasMany(ProcessedProduct::class);
     }
 
+    public function compiledProducts() : HasManyThrough
+    {
+        return $this->hasManyThrough(CompiledProduct::class, ProcessedProduct::class);
+    }
+
     protected static function booted()
     {
         static::updating(function (Processor $processor) {
             if ($processor->isDirty('mappings')) {
                 $processor->processedProducts()->update(['stale_level' => 2]);
+                $processor->compiledProducts()->update(['stale_level' => 1]);
             } else if ($processor->isDirty('transformations')) {
                 $processor->processedProducts()->update(['stale_level' => 1]);
+                $processor->compiledProducts()->update(['stale_level' => 1]);
             }
         });
     }

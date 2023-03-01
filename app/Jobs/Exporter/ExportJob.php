@@ -4,6 +4,7 @@ namespace App\Jobs\Exporter;
 
 use App\Models\Export;
 use App\Services\Export\ExportService;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 
 class ExportJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Export $export;
     /**
@@ -33,6 +34,8 @@ class ExportJob implements ShouldQueue
      */
     public function handle()
     {
+        if ( $this->batch()->canceled() ) return;
+
         $service = new ExportService($this->export);
 
         $exporter = $service->getExporter();

@@ -3,7 +3,9 @@
 namespace App\Jobs\Compiler;
 
 use App\Jobs\Product\FilterJob;
+use App\Models\CompiledProduct;
 use App\Models\Compiler;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +17,7 @@ use Illuminate\Support\Facades\Bus;
 
 class CompileJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Compiler $compiler;
     /**
@@ -35,14 +37,18 @@ class CompileJob implements ShouldQueue
      */
     public function handle()
     {
+        if ( $this->batch()->canceled() ) return;
+
         $processedProducts = $this->compiler->processedProducts()->select('ean')->distinct()->get();
 
         $this->upsertMissing($processedProducts);
 
+        $CPCount = $this->compiler->compiledProducts()->stale()->count();
+
         $batch = [];
         $batchSize = 500;
 
-        for ($i=0; $i<$processedProducts->count(); $i+=$batchSize)
+        for ($i=0; $i<$CPCount; $i+=$batchSize)
         {
             $batch[] = new CompileBatchJob($this->compiler, $i, $batchSize);
         }

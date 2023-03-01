@@ -8,6 +8,7 @@ use App\Models\Supplier;
 use App\Services\Supplier\PullService;
 use App\Traits\ChonkMeter;
 use Illuminate\Bus\Batch;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -19,7 +20,7 @@ use Throwable;
 
 class SupplierPull implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
     public $supplier;
 
@@ -47,6 +48,8 @@ class SupplierPull implements ShouldQueue
      */
     public function handle()
     {
+        if ( $this->batch()->canceled() ) return;
+
         $this->log("Starting import");
         $this->logChonk();
 

@@ -14,7 +14,7 @@ class CacheInvalidateJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected Product $product;
+    public Product $product;
     /**
      * Create a new job instance.
      *
@@ -32,6 +32,23 @@ class CacheInvalidateJob implements ShouldQueue
      */
     public function handle()
     {
-        $this->product->processedProducts()->update(['stale_level' => 2]);
+        $updated = $this->product->processedProducts()->update(['stale_level' => 2]);
+
+        if ($updated > 0) {
+            $this->invalidateCompiledProducts();
+        }
+    }
+
+    public function invalidateCompiledProducts() : void
+    {
+        $processedProducts = $this->product->processedProducts()->get();
+
+        if ($processedProducts->isEmpty()) {
+            return;
+        }
+
+        foreach($processedProducts as $pproduct) {
+            $pproduct->compiledProducts()->update(['stale_level' => 1]);
+        }
     }
 }

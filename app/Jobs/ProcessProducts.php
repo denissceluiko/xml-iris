@@ -8,6 +8,7 @@ use App\Jobs\Product\Transform;
 use App\Models\ProcessedProduct;
 use App\Models\Processor;
 use App\Traits\ChonkMeter;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\PendingBatch;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Bus;
 
 class ProcessProducts implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
     protected Processor $processor;
 
@@ -47,6 +48,8 @@ class ProcessProducts implements ShouldQueue
      */
     public function handle()
     {
+        if ( $this->batch()->canceled() ) return;
+
         $this->upsertMissing();
 
         $this->logChonk();
