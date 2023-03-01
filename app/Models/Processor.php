@@ -45,11 +45,11 @@ class Processor extends Model
     {
         static::updating(function (Processor $processor) {
             if ($processor->isDirty('mappings')) {
-                $processor->processedProducts()->update(['stale_level' => 2]);
-                $processor->compiledProducts()->update(['stale_level' => 1]);
+                $processor->processedProducts()->update(['processed_products.stale_level' => 2]);
+                $processor->compiledProducts()->update(['compiled_products.stale_level' => 1]);
             } else if ($processor->isDirty('transformations')) {
-                $processor->processedProducts()->update(['stale_level' => 1]);
-                $processor->compiledProducts()->update(['stale_level' => 1]);
+                $processor->processedProducts()->update(['processed_products.stale_level' => 1]);
+                $processor->compiledProducts()->update(['compiled_products.stale_level' => 1]);
             }
         });
     }
