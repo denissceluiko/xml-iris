@@ -108,6 +108,6 @@ class CompiledProduct extends Resource
     */
    public function subtitle()
    {
-       return "Compiler: {$this->compiler->name}";
+       return "Compiler: ".($this->compiler->name ?? 'none');
    }
 }
