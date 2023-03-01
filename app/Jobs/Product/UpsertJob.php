@@ -15,9 +15,9 @@ class UpsertJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ProductToolkit;
 
-    protected Supplier $supplier;
-    protected string $ean;
-    protected array $values;
+    public Supplier $supplier;
+    public string $ean;
+    public array $values;
 
     /**
      * Create a new job instance.

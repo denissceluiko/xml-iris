@@ -53,20 +53,15 @@ class XmlSupplierParseJob implements ShouldQueue
         }
 
         while ($this->reader->read() && $this->reader->name != $this->supplier->config['root_tag']);
+
         $this->elementMap = $this->generateElementMap();
 
-        $i=0;
+        // Skip all the gunk if there are any
+        while ($this->reader->name != $this->supplier->config['product_tag']) {
+            $this->reader->read();
+        }
+
         do {
-            if ($i%100 == 0 ) {
-                $this->logChonk();
-            }
-
-            $i++;
-            // Skip all the gunk if there are any
-            while ($this->reader->name != $this->supplier->config['product_tag']) {
-                $this->reader->read();
-            }
-
             $parsed = $this->parse($this->reader->readOuterXml());
 
             $ean = $this->getEAN($parsed);
@@ -75,7 +70,7 @@ class XmlSupplierParseJob implements ShouldQueue
                 UpsertJob::dispatch($this->supplier, $ean, $parsed);
             }
 
-        } while ($this->reader->next());
+        } while ($this->reader->next($this->supplier->config['product_tag']));
 
         $this->reader->close();
     }

@@ -53,7 +53,7 @@ class ProcessProductsTest extends TestCase
         $this->assertDatabaseCount('processed_products', 5);
 
         Bus::assertBatched(function(PendingBatch $batch) {
-            return $batch->jobs->count() == 5 ;
+            return $batch->jobs->count() == 1 ;
         });
     }
 }

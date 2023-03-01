@@ -17,6 +17,8 @@ trait CopyToImportDisk
 
     public function purgeCopies()
     {
+        if (empty($this->_copies)) return;
+        
         foreach ($this->_copies as $copy) {
             Storage::disk('import')->delete($copy);
         }

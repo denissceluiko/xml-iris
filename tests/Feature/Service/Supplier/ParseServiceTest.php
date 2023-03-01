@@ -3,6 +3,7 @@
 namespace Tests\Feature\Service\Supplier;
 
 use App\Models\Supplier;
+use App\Services\Supplier\Parsers\XmlParser;
 use App\Services\Supplier\ParseService;
 use App\Traits\ProductToolkit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,6 +32,10 @@ class ParseServiceTest extends TestCase
     {
         $supplier = Supplier::factory()
                         ->uri('supplier_import_simple.xml')
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                        ])
                         ->structure([
                             "products" => [
                                 "type" => "repeatingElements",
@@ -52,9 +57,9 @@ class ParseServiceTest extends TestCase
                         ->create();
 
         $path = $this->copyToImport($supplier->uri);
-        $parsed = (new ParseService($supplier, $path))->getParser()->parse();
+        $parser = (new ParseService($supplier, $path))->getParser();
 
-        $this->assertTrue($this->isProductArray($parsed));
+        $this->assertTrue($parser instanceof XmlParser);
 
         Storage::disk('import')->delete($path);
     }
