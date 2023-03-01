@@ -4,6 +4,7 @@ namespace App\Jobs\Product;
 
 use App\Models\Supplier;
 use App\Traits\ProductToolkit;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -55,11 +56,15 @@ class UpsertJob implements ShouldQueue
         }
 
         if ($product->values == $this->values) {
+            $product->update([
+                'last_pulled_at' => Carbon::now(),
+            ]);
             return;
         }
 
         $product->update([
             'values' => $this->values,
+            'last_pulled_at' => Carbon::now(),
         ]);
 
         CacheInvalidateJob::dispatch($product);

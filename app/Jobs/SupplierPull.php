@@ -22,7 +22,7 @@ class SupplierPull implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
-    public $supplier;
+    public Supplier $supplier;
 
 
     public function middleware()
@@ -50,6 +50,12 @@ class SupplierPull implements ShouldQueue
     {
         if ( $this->batch()->canceled() ) return;
 
+        if (!$this->canPull()) {
+            $this->fail("Cannot pull: config incomplete");
+            $this->log("Cannot pull: config incomplete");
+            return;
+        }
+
         $this->log("Starting import");
         $this->logChonk();
 
@@ -67,6 +73,14 @@ class SupplierPull implements ShouldQueue
         ParseJob::dispatch($this->supplier, $path);
     }
 
+    public function canPull() : bool
+    {
+        if (empty($this->supplier->uri)) return false;
+        if (!$this->supplier->configKeysSet()) return false;
+        if (!is_array($this->supplier->structure) || empty($this->supplier->structure)) return false;
+
+        return true;
+    }
 
     protected function log(string $message)
     {

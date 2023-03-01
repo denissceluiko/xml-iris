@@ -27,8 +27,6 @@ class Supplier extends Model
 
     public function pull() : void
     {
-        if (!$this->canPull()) return;
-
         SupplierPull::dispatch($this);
     }
 
@@ -36,23 +34,14 @@ class Supplier extends Model
      * Helpers
      *
      */
-    
 
-    protected function config(string $key) : string
+
+    public function config(string $key) : string
     {
         return $this->config[$key] ?? '';
     }
 
-    public function canPull() : bool
-    {
-        if (empty($this->uri)) return false;
-        if (!$this->configKeysSet()) return false;
-        if (!is_array($this->structure) || empty($this->structure)) return false;
-
-        return true;
-    }
-
-    protected function configKeysSet() : bool
+    public function configKeysSet() : bool
     {
         foreach (self::$configKeys as $key => $value) {
             if ($this->config($key) == '' && $value == 'required') return false;
