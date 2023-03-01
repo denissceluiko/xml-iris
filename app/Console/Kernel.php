@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Jobs\ExportCycle;
+use App\Jobs\Maintenance\PurgeAbandonedProducts;
 use App\Jobs\UpdateCycle;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -18,12 +19,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->job(new UpdateCycle)
-                ->hourlyAt(5)
+                ->hourlyAt(15)
                 ->withoutOverlapping();
 
         $schedule->job(new ExportCycle)
-                ->hourlyAt(35)
+                ->hourlyAt(45)
                 ->withoutOverlapping();
+
+        $schedule->job(new PurgeAbandonedProducts)
+                ->everyThreeHours();
     }
 
     /**
