@@ -36,8 +36,12 @@ class Processor extends Model
 
     protected static function booted()
     {
-        static::updated(function (Processor $processor) {
-            $processor->processedProducts()->update(['stale_level' => 2]);
+        static::updating(function (Processor $processor) {
+            if ($processor->isDirty('mappings')) {
+                $processor->processedProducts()->update(['stale_level' => 2]);
+            } else if ($processor->isDirty('transformations')) {
+                $processor->processedProducts()->update(['stale_level' => 1]);
+            }
         });
     }
 }
