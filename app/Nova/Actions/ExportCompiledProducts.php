@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Bus;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 
@@ -23,10 +24,14 @@ class ExportCompiledProducts extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
+        $batch = [];
+
         foreach ($models as $model)
         {
-            ExportJob::dispatch($model);
+            $batch[] = new ExportJob($model);
         }
+
+        Bus::batch($batch)->name('Manual export jobs')->dispatch();
     }
 
     /**

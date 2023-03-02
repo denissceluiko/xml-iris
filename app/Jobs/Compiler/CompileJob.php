@@ -2,8 +2,6 @@
 
 namespace App\Jobs\Compiler;
 
-use App\Jobs\Product\FilterJob;
-use App\Models\CompiledProduct;
 use App\Models\Compiler;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;

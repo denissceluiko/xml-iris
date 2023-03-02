@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Bus;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Fields\ActionFields;
 
@@ -23,9 +24,13 @@ class CompileProducts extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
+        $batch = [];
+
         foreach ($models as $model) {
-            CompileJob::dispatch($model);
+            $batch[] = new CompileJob($model);
         }
+
+        Bus::batch($batch)->name('Manual compilation jobs')->dispatch();
     }
 
     /**

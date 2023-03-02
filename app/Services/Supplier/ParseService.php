@@ -3,6 +3,7 @@
 namespace App\Services\Supplier;
 
 use App\Models\Supplier;
+use App\Services\Supplier\Parsers\CSVParser;
 use App\Services\Supplier\Parsers\Parser;
 use App\Services\Supplier\Parsers\ExcelParser;
 use App\Services\Supplier\Parsers\XmlParser;
@@ -36,6 +37,10 @@ class ParseService
             return $this->excel();
         }
 
+        if ($parser == 'csv') {
+            return $this->csv();
+        }
+
         Log::channel('import')->error("No parser found.");
 
         return null;
@@ -51,6 +56,10 @@ class ParseService
             return 'excel';
         }
 
+        if ($this->supplier->getSourceType() == 'csv') {
+            return 'csv';
+        }
+
         return null;
     }
 
@@ -62,5 +71,10 @@ class ParseService
     protected function excel() : ExcelParser
     {
         return new ExcelParser($this->supplier, $this->path);
+    }
+
+    protected function csv() : CSVParser
+    {
+        return new CSVParser($this->supplier, $this->path);
     }
 }
