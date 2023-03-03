@@ -38,6 +38,6 @@ class PurgeAbandonedProducts implements ShouldQueue
 
     public function cleanSupplier(Supplier $supplier)
     {
-        $purgables = $supplier->abandoned()->delete();
+        $purgables = $supplier->products()->abandoned()->delete();
     }
 }
