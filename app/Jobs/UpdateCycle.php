@@ -2,10 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Jobs\Compiler\CompileJob;
-use App\Jobs\Exporter\ExportJob;
 use App\Models\Compiler;
-use App\Models\Supplier;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -35,17 +32,17 @@ class UpdateCycle implements ShouldQueue
      */
     public function handle()
     {
-        $batch = [];
-
         foreach(Compiler::all() as $compiler)
         {
-            $batch[] = array_merge(
+            $batch = array_merge(
                 $this->getSupplierPullJobs($compiler),
                 $this->getProcessProductsJobs($compiler),
             );
-        }
 
-        Bus::batch($batch)->name('Update Cycle')->dispatch();
+            Bus::batch($batch)
+                ->name("Update Cycle for compiler: {$compiler->name} ({$compiler->id})")
+                ->dispatch();
+        }
     }
 
     public function getSupplierPullJobs(Compiler $compiler) : array
