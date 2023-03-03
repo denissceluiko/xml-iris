@@ -28,6 +28,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->job(new PurgeAbandonedProducts)
                 ->everyThreeHours();
+
+        $schedule->command('horizon:snapshot')->everyFiveMinutes();
     }
 
     /**
