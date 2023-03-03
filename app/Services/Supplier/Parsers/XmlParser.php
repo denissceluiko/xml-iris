@@ -2,6 +2,7 @@
 
 namespace App\Services\Supplier\Parsers;
 
+use App\Jobs\Supplier\CleanupJob;
 use App\Jobs\XmlSupplierParseJob;
 use App\Models\Supplier;
 use Sabre\Xml\Reader;
@@ -22,6 +23,8 @@ class XmlParser extends Parser
 
     public function parse() : void
     {
-        XmlSupplierParseJob::dispatch($this->supplier, $this->path);
+        XmlSupplierParseJob::dispatch($this->supplier, $this->path)->chain([
+            new CleanupJob($this->path),
+        ]);
     }
 }
