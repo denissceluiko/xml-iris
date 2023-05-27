@@ -50,6 +50,7 @@ class UpsertJob implements ShouldQueue
             $this->supplier->products()->create([
                 'ean' => $this->ean,
                 'values' => $this->values,
+                'last_pulled_at' => Carbon::now(),
             ]);
 
             return;
