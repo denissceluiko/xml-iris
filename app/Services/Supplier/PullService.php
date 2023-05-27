@@ -27,12 +27,13 @@ class PullService
         }
 
         if (empty($this->supplier->credentials['login']) || empty($this->supplier->credentials['password'])) {
-            $response = Http::get($this->supplier->uri);
+            $response = Http::timeout(120)->get($this->supplier->uri);
         } else {
             $response = Http::withBasicAuth($this->supplier->credentials['login'], $this->supplier->credentials['password'])
                                 ->withHeaders([
                                     'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
                                 ])
+                                ->timeout(120)
                                 ->get($this->supplier->uri);
         }
 

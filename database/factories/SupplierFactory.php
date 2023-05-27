@@ -83,6 +83,7 @@ class SupplierFactory extends Factory
 
         $config = [
             'xmlns' => '',
+            'ean_path' => 'ean',
             'root_tag' => $productTag.'s',
             'product_tag' => $productTag,
             'source_type' => $this->getSourceType($attributes),

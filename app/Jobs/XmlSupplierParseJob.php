@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Jobs\Product\UpsertJob;
 use App\Models\Supplier;
+use App\Services\Processor\ExtractorService;
 use App\Traits\ChonkMeter;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -209,12 +210,12 @@ class XmlSupplierParseJob implements ShouldQueue
 
     protected function getEAN(array $product) : ?string
     {
-        foreach ($product['value'] as $element) {
-            if ($element['name'] == '{}ean')
-                return $element['value'];
-        }
+        $extractor = new ExtractorService([
+            "ean" => $this->supplier->config('ean_path'),
+        ]);
+        $data = $extractor->extract($product);
 
-        return null;
+        return $data['ean'] ?? null;
     }
 
     protected function enclose(string $xml) : string

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Jobs\SupplierPull;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -15,6 +14,7 @@ class Supplier extends Model
     protected static $configKeys = [
         'xmlns' => 'optional',
         'root_tag' => 'required',
+        'ean_path' => 'required',
         'product_tag' => 'required',
         'source_type' => 'required',
     ];
@@ -25,20 +25,21 @@ class Supplier extends Model
         'credentials' => 'array',
     ];
 
-    public function pull() : void
-    {
-        SupplierPull::dispatch($this);
-    }
-
     /**
      * Helpers
      *
      */
 
-
     public function config(string $key) : string
     {
         return $this->config[$key] ?? '';
+    }
+
+    public function configSet(string $key, string $value) : void
+    {
+        $config = $this->config;
+        $config[$key] = $value;
+        $this->config = $config;
     }
 
     public function configKeysSet() : bool
