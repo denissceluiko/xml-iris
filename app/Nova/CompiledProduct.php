@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -54,6 +55,7 @@ class CompiledProduct extends Resource
             Boolean::make(__('Fresh?'), function() {
                 return !$this->stale_level;
             }),
+            DateTime::make(__('Updated at'), 'updated_at')->readonly()->showOnDetail(),
         ];
     }
 
