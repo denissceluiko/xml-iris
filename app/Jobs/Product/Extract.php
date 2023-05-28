@@ -41,7 +41,7 @@ class Extract implements ShouldQueue
 
         $extractedData = $extractor->extract($this->product->product->values);
 
-        if (empty($extractedData) {
+        if (empty($extractedData)) {
             $this->fail("Data extraction failed");
             return;
         }
