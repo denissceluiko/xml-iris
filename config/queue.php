@@ -66,19 +66,12 @@ return [
             'driver' => 'redis',
             'connection' => 'default',
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 90,
+            'retry_after' => 360,
+            'timeout' => 300,
             'block_for' => null,
             'after_commit' => false,
         ],
 
-        'redis-long-running' => [
-            'driver' => 'redis',
-            'connection' => 'default',
-            'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 3600,
-            'block_for' => null,
-            'after_commit' => false,
-        ],
 
     ],
 

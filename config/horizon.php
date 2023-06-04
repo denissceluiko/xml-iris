@@ -119,7 +119,11 @@ return [
     */
 
     'silenced' => [
-        // App\Jobs\ExampleJob::class,
+        App\Jobs\Product\UpsertJob::class,
+        App\Jobs\Product\CacheInvalidateJob::class,
+        App\Jobs\Product\Extract::class,
+        App\Jobs\Product\Transform::class,
+        App\Jobs\Product\FilterJob::class,
     ],
 
     /*
@@ -193,7 +197,7 @@ return [
             'nice' => 0,
         ],
         'supervisor-long-running' => [
-            'connection' => 'redis-long-running',
+            'connection' => 'redis',
             'queue' => ['long-running-queue'],
             'balance' => 'auto',
             'maxProcesses' => 1,
@@ -201,7 +205,7 @@ return [
             'maxJobs' => 0,
             'memory' => 256,
             'tries' => 1,
-            'timeout' => 600,
+            'timeout' => 300,
             'nice' => 0,
         ],
     ],
