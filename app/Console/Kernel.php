@@ -30,7 +30,7 @@ class Kernel extends ConsoleKernel
                 ->everyThreeHours();
 
         $schedule->command('horizon:snapshot')->everyFiveMinutes();
-        $schedule->command('queue:prune-batches --hours=168')->daily();
+        $schedule->command('queue:prune-batches --hours=12 --unfinished=168 --cancelled=168')->daily();
     }
 
     /**
