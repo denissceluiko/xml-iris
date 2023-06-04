@@ -31,7 +31,10 @@ class SupplierPull extends Action
             $batch[] = new JobsSupplierPull($supplier);
         }
 
-        Bus::batch($batch)->name('Manual Supplier pull')->dispatch();
+        Bus::batch($batch)
+            ->name('Manual Supplier pull')
+            ->onQueue('long-running-queue')
+            ->dispatch();
     }
 
     /**
