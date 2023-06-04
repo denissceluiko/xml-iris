@@ -55,6 +55,9 @@ class CompileBatchJob implements ShouldQueue
             $batch[] = new FilterJob($this->compiler, $product->ean);
         }
 
-        Bus::batch($batch)->name('Compile product batch')->dispatch();
+        Bus::batch($batch)
+            ->name('Compile product batch')
+            ->allowFailures()
+            ->dispatch();
     }
 }

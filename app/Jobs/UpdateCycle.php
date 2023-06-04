@@ -42,6 +42,7 @@ class UpdateCycle implements ShouldQueue
             // FYI: non default queue should be explicit when batching jobs.
             Bus::batch($batch)
                 ->name("Update Cycle for compiler: {$compiler->name} ({$compiler->id})")
+                ->allowFailures()
                 ->onQueue('long-running-queue')
                 ->dispatch();
         }

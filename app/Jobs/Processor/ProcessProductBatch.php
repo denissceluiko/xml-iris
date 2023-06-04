@@ -64,7 +64,10 @@ class ProcessProductBatch implements ShouldQueue
             }
         }
 
-        Bus::batch($batch)->name('Product processor batch')->dispatch();
+        Bus::batch($batch)
+            ->name('Product processor batch')
+            ->allowFailures()
+            ->dispatch();
     }
 
     public function transform(ProcessedProduct $product) : Transform
