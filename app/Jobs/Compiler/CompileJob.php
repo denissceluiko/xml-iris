@@ -51,7 +51,9 @@ class CompileJob implements ShouldQueue
             $batch[] = new CompileBatchJob($this->compiler, $i, $batchSize);
         }
 
-        Bus::batch($batch)->name('Compile products master')->dispatch();
+        if (!empty($batch)) {
+            Bus::batch($batch)->name('Compile products master')->dispatch();
+        }
     }
 
     public function upsertMissing(Collection $EANs)
