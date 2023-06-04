@@ -45,7 +45,10 @@ class ExportCycle implements ShouldQueue
             );
         }
 
-        Bus::batch($batch)->name('Export Cycle')->dispatch();
+        Bus::batch($batch)
+            ->name('Export Cycle')
+            ->onQueue('long-running-queue')
+            ->dispatch();
     }
 
     public function getExportJobs(Compiler $compiler) : array

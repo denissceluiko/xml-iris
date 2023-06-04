@@ -31,7 +31,10 @@ class ExportCompiledProducts extends Action
             $batch[] = new ExportJob($model);
         }
 
-        Bus::batch($batch)->name('Manual export jobs')->dispatch();
+        Bus::batch($batch)
+            ->name('Manual export jobs')
+            ->onQueue('long-running-queue')
+            ->dispatch();
     }
 
     /**

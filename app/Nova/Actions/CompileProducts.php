@@ -30,7 +30,10 @@ class CompileProducts extends Action
             $batch[] = new CompileJob($model);
         }
 
-        Bus::batch($batch)->name('Manual compilation jobs')->dispatch();
+        Bus::batch($batch)
+            ->name('Manual compilation jobs')
+            ->onQueue('long-running-queue')
+            ->dispatch();
     }
 
     /**

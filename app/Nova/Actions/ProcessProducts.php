@@ -30,7 +30,10 @@ class ProcessProducts extends Action
             $batch = new JobsProcessProducts($model);
         }
 
-        Bus::batch($batch)->name('Manual processing jobs')->dispatch();
+        Bus::batch($batch)
+            ->name('Manual processing jobs')
+            ->onQueue('long-running-queue')
+            ->dispatch();
     }
 
     /**
