@@ -37,6 +37,7 @@ class XmlSupplierParserJobTest extends TestCase
                             'root_tag' => 'products',
                             'product_tag' => 'product',
                             'source_type' => 'xml',
+                            'ean_path' => 'ean',
                         ])
                         ->structure([
                             "products" => [
@@ -115,6 +116,7 @@ class XmlSupplierParserJobTest extends TestCase
                             'root_tag' => 'products',
                             'product_tag' => 'product',
                             'source_type' => 'xml',
+                            'ean_path' => 'ean',
                         ])
                         ->structure([
                             "supplier" => [
@@ -199,6 +201,7 @@ class XmlSupplierParserJobTest extends TestCase
                             'root_tag' => 'products',
                             'product_tag' => 'product',
                             'source_type' => 'xml',
+                            'ean_path' => 'ean',
                         ])
                         ->structure([
                             "products" => [
@@ -316,6 +319,7 @@ class XmlSupplierParserJobTest extends TestCase
                             'root_tag' => 'products',
                             'product_tag' => 'product',
                             'source_type' => 'xml',
+                            'ean_path' => 'ean',
                         ])
                         ->structure([
                             "products" => [
@@ -442,4 +446,144 @@ class XmlSupplierParserJobTest extends TestCase
 
     }
 
+    /**
+     * A basic ean extractor test.
+     *
+     * @test
+     * @return void
+     */
+    public function can_extract_ean_simple()
+    {
+
+        $supplier = Supplier::factory()
+                        ->uri('supplier_ean_simple.xml')
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                            'ean_path' => 'ean',
+                        ])
+                        ->structure([
+                            "products" => [
+                                "type" => "repeatingElements",
+                                "child" => "product",
+                                "value" => [
+                                    "product" => [
+                                        "type" => "keyValue",
+                                        "value" => [
+                                            "ean" => "ean",
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ])
+                        ->create();
+
+        Bus::fake();
+
+        $parser = new XmlSupplierParseJob($supplier, Storage::path($supplier->uri));
+        $parser->handle();
+
+        Bus::assertDispatched(function (UpsertJob $job) {
+            return $job->ean === "0000000000000";
+        });
+    }
+
+    /**
+     * A basic ean extractor test.
+     *
+     * @test
+     * @return void
+     */
+    public function can_extract_ean_nested()
+    {
+
+        $supplier = Supplier::factory()
+                        ->uri('supplier_ean_nested.xml')
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                            'ean_path' => 'properties->ean',
+                        ])
+                        ->structure([
+                            "products" => [
+                                "type" => "repeatingElements",
+                                "child" => "product",
+                                "value" => [
+                                    "product" => [
+                                        "type" => "keyValue",
+                                        "value" => [
+                                            "properties" => [
+                                                "type" => "keyValue",
+                                                "value" => [
+                                                    "main" => "string",
+                                                ],
+                                            ],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ])
+                        ->create();
+
+        Bus::fake();
+
+        $parser = new XmlSupplierParseJob($supplier, Storage::path($supplier->uri));
+        $parser->handle();
+
+        Bus::assertDispatched(function (UpsertJob $job) {
+            return $job->ean === "0000000000000";
+        });
+    }
+
+    /**
+     * A basic ean extractor test.
+     *
+     * @test
+     * @return void
+     */
+    public function can_extract_ean_as_attribute()
+    {
+
+        $supplier = Supplier::factory()
+                        ->uri('supplier_ean_as_attribute.xml')
+                        ->config([
+                            'root_tag' => 'products',
+                            'xmlns' => 'iaiext',
+                            'product_tag' => 'product',
+                            'source_type' => 'xml',
+                            'ean_path' => 'sizes->size->[producer_code]',
+                        ])
+                        ->structure([
+                            "products" => [
+                                "type" => "repeatingElements",
+                                "child" => "product",
+                                "value" => [
+                                    "product" => [
+                                        "type" => "keyValue",
+                                        "value" => [
+                                            "sizes" => [
+                                                "type" => "repeatingElements",
+                                                "child" => "size",
+                                                "attributes" => [
+                                                    "producer_code" => "ean",
+                                                ],
+                                            ],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ])
+                        ->create();
+
+        Bus::fake();
+
+        $parser = new XmlSupplierParseJob($supplier, Storage::path($supplier->uri));
+        $parser->handle();
+
+        Bus::assertDispatched(function (UpsertJob $job) {
+            return $job->ean === "0000000000000";
+        });
+    }
 }
