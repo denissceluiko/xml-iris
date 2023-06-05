@@ -64,7 +64,7 @@ class ParseServiceTest extends TestCase
         Storage::disk('import')->delete($path);
     }
 
-        /**
+    /**
      * @test
      * @return void
      */
@@ -98,6 +98,39 @@ class ParseServiceTest extends TestCase
         Storage::disk('import')->delete($path);
     }
 
+    /**
+     * @test
+     * @return void
+     */
+    public function can_parse_csv_file()
+    {
+        $supplier = Supplier::factory()
+                        ->uri('supplier_import_simple.csv')
+                        ->config([
+                            'source_type' => 'csv'
+                        ])
+                        ->structure([
+                            "sku" => "sku",
+                            "ean" => "gtin",
+                            "price_lt" => "PRICE LT",
+                            "price_after_discount_lt" => "Price LT after discount",
+                            "price_lv" => "PRICE LV",
+                            "price_after_discount_lv" => "Price LV after discount",
+                            "price_ee" => "PRICE EE",
+                            "price_after_discount_ee" => "Price EE after discount",
+                            "stock" => "stock",
+                            "delivery_hours" => "Delivery hours",
+                          ])
+                        ->create();
+
+        $path = $this->copyToImport($supplier->uri);
+
+        (new ParseService($supplier, $path))->getParser()->parse();
+
+        $this->assertDatabaseCount('products', 2);
+
+        Storage::disk('import')->delete($path);
+    }
     /**
      * @test
      * @return void
