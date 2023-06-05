@@ -39,8 +39,10 @@ class ExtractorService
         return $tree['value'] ?? null;
     }
 
-    protected function execute($instruction, array $tree)
+    protected function execute($instruction, ?array $tree)
     {
+        if (!is_array($tree)) return null;
+        
         $field = null;
 
         if (strpos($instruction, 'where') === 0) {
@@ -92,6 +94,8 @@ class ExtractorService
 
     protected function whereAttribute($attribute, $value, array $tree) : array
     {
+        if (!is_array($tree['value'])) return ['value' => null];
+
         foreach($tree['value'] as $element)
         {
             if (!$this->hasAttribute($attribute, $element)) continue;
