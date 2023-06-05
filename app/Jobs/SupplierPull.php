@@ -3,11 +3,9 @@
 namespace App\Jobs;
 
 use App\Jobs\Supplier\ParseJob;
-use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\Supplier\PullService;
 use App\Traits\ChonkMeter;
-use Illuminate\Bus\Batch;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -52,23 +50,16 @@ class SupplierPull implements ShouldQueue
 
         if (!$this->canPull()) {
             $this->fail("Cannot pull: config incomplete");
-            $this->log("Cannot pull: config incomplete");
             return;
         }
-
-        $this->log("Starting import");
-        $this->logChonk();
 
         // Pull XML
         $path = (new PullService($this->supplier))->pull();
 
         if ($path == null) {
             $this->fail("Data path failed to load.");
-            $this->log("Data path failed to load.");
+            return;
         }
-
-        $this->log("Data path loaded.");
-        $this->logChonk();
 
         ParseJob::dispatch($this->supplier, $path);
     }
@@ -82,9 +73,20 @@ class SupplierPull implements ShouldQueue
         return true;
     }
 
+    /**
+     * Handle a job failure.
+     *
+     * @param  \Throwable  $exception
+     * @return void
+     */
+    public function failed(Throwable $exception)
+    {
+        $this->log($exception->getMessage());
+        $this->delete();
+    }
+
     protected function log(string $message)
     {
         Log::channel('import')->info("[Supplier:\t{$this->supplier->id}] $message");
     }
-
 }
