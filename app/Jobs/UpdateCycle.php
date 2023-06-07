@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Processor\ProcessProducts;
 use App\Models\Compiler;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
