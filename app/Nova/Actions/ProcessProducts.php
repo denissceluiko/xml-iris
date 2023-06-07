@@ -2,7 +2,7 @@
 
 namespace App\Nova\Actions;
 
-use App\Jobs\ProcessProducts as JobsProcessProducts;
+use App\Jobs\Processor\ProcessProducts as JobsProcessProducts;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;

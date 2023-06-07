@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Processor;
 
 use App\Jobs\Processor\ProcessProductBatch;
 use App\Jobs\Product\Extract;
@@ -64,7 +64,10 @@ class ProcessProducts implements ShouldQueue
             $batch[] = new ProcessProductBatch($this->processor, $i, $batchSize);
         }
 
-        Bus::batch($batch)->name('Product processor master')->dispatch();
+        Bus::batch($batch)
+            ->name('Product processor master')
+            ->onQueue('long-running-queue')
+            ->dispatch();
     }
 
     public function upsertMissing()
