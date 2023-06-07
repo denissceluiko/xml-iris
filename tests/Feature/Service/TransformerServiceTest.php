@@ -145,7 +145,7 @@ class TransformerServiceTest extends TestCase
             'stock' => 'stock',
             'expression_lt' => '["price", "<", "1.00", "price*3", "price"]',
             'expression_eq' => '["price", "=", "0.94", "price*2", "price"]',
-            'expression_gt' => '["price", ">", "1.00", "price*3", "price"]',
+            'expression_gt' => '["price", ">", "0.50", "price", "price*3"]',
         ], [
             'sku' => 'string',
             'price' => 'float',
