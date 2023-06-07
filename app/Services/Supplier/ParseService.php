@@ -52,7 +52,7 @@ class ParseService
             return 'xml';
         }
 
-        if ($this->supplier->getSourceType() == 'excel') {
+        if (in_array( $this->supplier->getSourceType(), ['excel', 'xls', 'xlsx'])) {
             return 'excel';
         }
 
