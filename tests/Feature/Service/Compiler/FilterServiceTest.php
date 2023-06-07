@@ -117,6 +117,9 @@ class FilterServiceTest extends TestCase
             'delivery_time' => 'int',
         ];
 
+        /*
+         * "<" rule
+         */
         $compiler = Compiler::factory()
                         ->fields($fields)
                         ->rules('order("delivery_time", "asc")->dropIf("stock", "<", "1")')
@@ -137,6 +140,57 @@ class FilterServiceTest extends TestCase
 
         $this->assertTrue($filtered instanceof ProcessedProduct);
         $this->assertEquals(43, $filtered->transformed_data['stock']);
+        $this->assertEquals(24, $filtered->transformed_data['delivery_time']);
+
+        /*
+         * ">" rule
+         */
+        $compiler = Compiler::factory()
+                        ->fields($fields)
+                        ->rules('order("delivery_time", "asc")->dropIf("stock", ">", "10")')
+                        ->create();
+
+        $processedProducts = ProcessedProduct::factory()
+                                ->count(3)
+                                ->state(new Sequence(
+                                    ['transformed_data' => ['delivery_time' => 24, 'stock' => 15]],
+                                    ['transformed_data' => ['delivery_time' => 36, 'stock' => 5]],
+                                    ['transformed_data' => ['delivery_time' => 24, 'stock' => 43]],
+                                ))
+                                ->make();
+
+        $service = new FilterService($compiler);
+
+        $filtered = $service->filter($processedProducts);
+
+        $this->assertTrue($filtered instanceof ProcessedProduct);
+        $this->assertEquals(5, $filtered->transformed_data['stock']);
+        $this->assertEquals(36, $filtered->transformed_data['delivery_time']);
+
+        /*
+         * "=" rule
+         */
+
+        $compiler = Compiler::factory()
+                        ->fields($fields)
+                        ->rules('order("delivery_time", "asc")->dropIf("stock", "=", "0")')
+                        ->create();
+
+        $processedProducts = ProcessedProduct::factory()
+                                ->count(3)
+                                ->state(new Sequence(
+                                    ['transformed_data' => ['delivery_time' => 12, 'stock' => 0]],
+                                    ['transformed_data' => ['delivery_time' => 6, 'stock' => 0]],
+                                    ['transformed_data' => ['delivery_time' => 24, 'stock' => 15]],
+                                ))
+                                ->make();
+
+        $service = new FilterService($compiler);
+
+        $filtered = $service->filter($processedProducts);
+
+        $this->assertTrue($filtered instanceof ProcessedProduct);
+        $this->assertEquals(15, $filtered->transformed_data['stock']);
         $this->assertEquals(24, $filtered->transformed_data['delivery_time']);
     }
 
@@ -245,5 +299,14 @@ class FilterServiceTest extends TestCase
         $this->assertTrue($filtered instanceof ProcessedProduct);
         $this->assertEquals(0, $filtered->transformed_data['stock']);
         $this->assertEquals(12, $filtered->transformed_data['delivery_time']);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_handle_malformed_rules()
+    {
+        // TBI for Services/Compiler/FilterService::parseRule(). 
     }
 }
