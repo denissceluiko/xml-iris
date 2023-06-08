@@ -52,7 +52,10 @@ class CompileJob implements ShouldQueue
         }
 
         if (!empty($batch)) {
-            Bus::batch($batch)->name('Compile products master')->dispatch();
+            Bus::batch($batch)
+                ->name('Compile products master')
+                ->onQueue('default')
+                ->dispatch();
         }
     }
 
