@@ -26,6 +26,13 @@ class CompilerFactory extends Factory
 
     }
 
+    public function name(string $name) : self
+    {
+        return $this->state(function($attributes) use ($name) {
+            return ['name' => $name];
+        });
+    }
+
     public function rules(string $rules) : self
     {
         return $this->state(function($attributes) use ($rules) {
