@@ -32,7 +32,7 @@ class ExportJobTest extends TestCase
                         ->excel()
                         ->create();
 
-        $job = new ExportJob($export);
+        [$job, $batch] = (new ExportJob($export))->withFakeBatch();
 
         $job->handle();
 
@@ -57,7 +57,7 @@ class ExportJobTest extends TestCase
                         ->xml()
                         ->create();
 
-        $job = new ExportJob($export);
+        [$job, $batch] = (new ExportJob($export))->withFakeBatch();
 
         $job->handle();
 
@@ -77,7 +77,7 @@ class ExportJobTest extends TestCase
                         ->type('nonexistent')
                         ->create();
 
-        $job = new ExportJob($export);
+        [$job, $batch] = (new ExportJob($export))->withFakeBatch();
 
         try {
             $job->handle();
