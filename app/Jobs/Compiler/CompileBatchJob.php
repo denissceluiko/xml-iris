@@ -40,7 +40,7 @@ class CompileBatchJob implements ShouldQueue
      */
     public function handle()
     {
-        $processedProducts = $this->compiler
+        $compiledProducts = $this->compiler
                                 ->compiledProducts()
                                 ->select('ean')
                                 ->stale()
@@ -50,13 +50,14 @@ class CompileBatchJob implements ShouldQueue
 
         $batch = [];
 
-        foreach ($processedProducts as $product)
+        foreach ($compiledProducts as $product)
         {
             $batch[] = new FilterJob($this->compiler, $product->ean);
         }
 
         Bus::batch($batch)
             ->name('Compile product batch')
+            ->onQueue('default')
             ->allowFailures()
             ->dispatch();
     }

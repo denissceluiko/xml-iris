@@ -13,7 +13,9 @@ use Tests\TestCase;
 
 class CompileBatchJobTest extends TestCase
 {
-/**
+    use RefreshDatabase;
+
+    /**
      * Will create batch compilers and upsert missing compiled products
      *
      * @test
