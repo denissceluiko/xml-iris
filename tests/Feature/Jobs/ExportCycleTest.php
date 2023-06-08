@@ -35,7 +35,7 @@ class ExportCycleTest extends TestCase
 
         Bus::assertBatchCount(1);
         Bus::assertBatched(function (PendingBatch $batch) use ($compiler) {
-            return $batch->name == 'Export cycle' &&
+            return $batch->name == 'Export Cycle' &&
                    $batch->queue() == 'long-running-queue' &&
                    $batch->jobs->count() == 1 &&
                    $batch->jobs[0][0] instanceof CompileJob &&
@@ -65,7 +65,7 @@ class ExportCycleTest extends TestCase
 
         Bus::assertBatchCount(1);
         Bus::assertBatched(function (PendingBatch $batch) use ($compiler) {
-            return $batch->name == 'Export cycle' &&
+            return $batch->name == 'Export Cycle' &&
                    $batch->queue() == 'long-running-queue' &&
                    $batch->jobs->count() == 2 &&
                    $batch->jobs[0][0] instanceof CompileJob &&
