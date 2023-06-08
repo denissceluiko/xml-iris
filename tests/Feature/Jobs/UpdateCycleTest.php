@@ -24,7 +24,7 @@ class UpdateCycleTest extends TestCase
         Bus::fake();
 
         $compiler = Compiler::factory()
-            ->name('Test factory')
+            ->name('Test compiler')
             ->hasProcessors(2)
             ->create();
 
@@ -49,8 +49,8 @@ class UpdateCycleTest extends TestCase
 
         $compiler = Compiler::factory()
             ->state(new Sequence([
-                'name' => 'Test factory 1',
-                'name' => 'Test factory 2',
+                'name' => 'Test compiler 1',
+                'name' => 'Test compiler 2',
             ]))
             ->hasProcessors(2)
             ->count(2)
