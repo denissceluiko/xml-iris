@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Product;
 use App\Models\Supplier;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,6 +22,7 @@ class ProductFactory extends Factory
         return [
             'ean' => fake()->ean13(),
             'supplier_id' => Supplier::factory(),
+            'last_pulled_at' => Carbon::now(),
             'values' => function ($attributes) {
                 return $this->generateValues(Supplier::find($attributes['supplier_id']));
             },
@@ -37,6 +40,13 @@ class ProductFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($values) {
             return ['values' => $values];
+        });
+    }
+
+    public function abandoned()
+    {
+        return $this->state(function (array $attributes) {
+            return ['last_pulled_at' => Carbon::now()->subSeconds(Product::$abandonedAge + 1)];
         });
     }
 
