@@ -3,9 +3,11 @@
 namespace Tests\Feature\Jobs\Supplier;
 
 use App\Jobs\Supplier\ParseJob;
+use App\Jobs\XmlSupplierParseJob;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
@@ -54,8 +56,51 @@ class ParseJobTest extends TestCase
         Excel::assertQueued(Storage::disk('import')->path($path));
     }
 
+    /**
+     * @test
+     * @return void
+     */
+    public function can_route_parse_job_to_csv_handler()
+    {
+        Excel::fake();
+
+        $supplier = Supplier::factory()
+            ->uri('supplier_import_simple.csv')
+            ->config([
+                'source_type' => 'csv'
+            ])
+            ->create();
+
+        $path = $this->copyToImport($supplier->uri);
+
+        $job = new ParseJob($supplier, $path);
+
+        $job->handle();
+
+        Excel::assertQueued(Storage::disk('import')->path($path));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
     public function can_route_parse_job_to_xml_handler()
     {
+        Bus::fake();
 
+        $supplier = Supplier::factory()
+            ->uri('supplier_import_simple.xml')
+            ->config([
+                'source_type' => 'xml'
+            ])
+            ->create();
+
+        $path = $this->copyToImport($supplier->uri);
+
+        $job = new ParseJob($supplier, $path);
+
+        $job->handle();
+
+        Bus::assertDispatched(XmlSupplierParseJob::class);
     }
 }
