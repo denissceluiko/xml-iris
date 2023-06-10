@@ -11,6 +11,8 @@ class Supplier extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['last_pulled_at'];
+
     protected static $configKeys = [
         'xmlns' => 'optional',
         'root_tag' => 'required',
@@ -23,6 +25,7 @@ class Supplier extends Model
         'structure' => 'array',
         'config' => 'array',
         'credentials' => 'array',
+        'last_pulled_at' => 'datetime',
     ];
 
     /**

@@ -5,6 +5,7 @@ namespace Tests\Feature\Supplier;
 use App\Jobs\Supplier\ParseJob;
 use App\Jobs\SupplierPull;
 use App\Models\Supplier;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
@@ -38,6 +39,9 @@ class SupplierPullJobTest extends TestCase
         $job->handle();
 
         Bus::assertDispatched(ParseJob::class);
+        $this->assertDatabaseHas('suppliers', [
+            'last_pulled_at' => Carbon::now(),
+        ]);
     }
 
     /**

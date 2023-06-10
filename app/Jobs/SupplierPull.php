@@ -6,6 +6,7 @@ use App\Jobs\Supplier\ParseJob;
 use App\Models\Supplier;
 use App\Services\Supplier\PullService;
 use App\Traits\ChonkMeter;
+use Carbon\Carbon;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -60,6 +61,10 @@ class SupplierPull implements ShouldQueue
             $this->fail("Data path failed to load.");
             return;
         }
+        
+        $this->supplier->update([
+            'last_pulled_at' => Carbon::now(),
+        ]);
 
         ParseJob::dispatch($this->supplier, $path);
     }
