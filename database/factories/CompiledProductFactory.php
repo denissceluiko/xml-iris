@@ -47,4 +47,9 @@ class CompiledProductFactory extends Factory
             return ['stale_level' => $state];
         });
     }
+
+    public function fresh() : self
+    {
+        return $this->stale(0);
+    }
 }

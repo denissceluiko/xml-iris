@@ -22,6 +22,7 @@ class ProcessedProductFactory extends Factory
             'ean' => fake()->ean13(),
             'product_id' => Product::factory(),
             'processor_id' => Processor::factory(),
+            'stale_level' => 2,
         ];
     }
 
@@ -58,5 +59,10 @@ class ProcessedProductFactory extends Factory
         return $this->state(function ($attributes) use ($state) {
             return ['stale_level' => $state];
         });
+    }
+
+    public function fresh() : self
+    {
+        return $this->stale(0);
     }
 }
