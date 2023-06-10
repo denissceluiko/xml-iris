@@ -6,6 +6,7 @@ use App\Models\Supplier as ModelsSupplier;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
@@ -65,6 +66,7 @@ class Supplier extends Resource
             Code::make(__('Structure'), 'structure')
                     ->rules('json')
                     ->json(),
+            DateTime::make(__('Last pulled at'), 'last_pulled_at')->readonly()->hideFromIndex(),
             HasMany::make('Products'),
         ];
     }
