@@ -103,4 +103,27 @@ class ParseJobTest extends TestCase
 
         Bus::assertDispatched(XmlSupplierParseJob::class);
     }
+       /**
+     * @test
+     * @return void
+     */
+    public function will_not_route_if_handler_does_not_exist()
+    {
+        Bus::fake();
+
+        $supplier = Supplier::factory()
+            ->uri('supplier_import_simple.xml')
+            ->config([
+                'source_type' => 'null'
+            ])
+            ->create();
+
+        $path = $this->copyToImport($supplier->uri);
+
+        $job = new ParseJob($supplier, $path);
+        
+        $job->handle();
+
+        Bus::assertNothingDispatched();
+    }
 }

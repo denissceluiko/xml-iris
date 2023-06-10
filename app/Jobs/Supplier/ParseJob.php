@@ -3,6 +3,7 @@
 namespace App\Jobs\Supplier;
 
 use App\Models\Supplier;
+use App\Services\Supplier\Parsers\Parser;
 use App\Services\Supplier\ParseService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -41,14 +42,14 @@ class ParseJob implements ShouldQueue
         $service = new ParseService($this->supplier, $this->path);
         $parser = $service->getParser();
 
-        if ($parser) {
-            $parser->parse();
+        if (! $parser instanceof Parser) {
+            $message = "No parser found for Supplier ID: {$this->supplier->id}";
+
+            Log::channel('import')->warning($message);
+            $this->fail($message);
             return;
         }
 
-        $message = "No parser found for Supplier ID: {$this->supplier->id}";
-
-        Log::channel('import')->warning($message);
-        $this->fail($message);
+        $parser->parse();
     }
 }
