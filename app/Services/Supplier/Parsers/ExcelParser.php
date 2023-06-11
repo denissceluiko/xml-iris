@@ -5,6 +5,8 @@ namespace App\Services\Supplier\Parsers;
 use App\Imports\ExcelProductsImport;
 use App\Jobs\Supplier\CleanupJob;
 use App\Models\Supplier;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ExcelParser extends Parser
@@ -18,12 +20,8 @@ class ExcelParser extends Parser
         $this->path = $path;
     }
 
-    public function parse() : void
+    public function parse() : PendingDispatch
     {
-        Excel::import(new ExcelProductsImport($this->supplier), $this->path, null, \Maatwebsite\Excel\Excel::XLSX)
-        ->chain([
-            new CleanupJob($this->path),
-        ]);
-
+        return (new ExcelProductsImport($this->supplier))->queue($this->path, null, \Maatwebsite\Excel\Excel::XLSX);
     }
 }

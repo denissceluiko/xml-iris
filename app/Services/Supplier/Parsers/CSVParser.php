@@ -5,6 +5,7 @@ namespace App\Services\Supplier\Parsers;
 use App\Imports\CSVProductsImport;
 use App\Jobs\Supplier\CleanupJob;
 use App\Models\Supplier;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CSVParser extends Parser
@@ -18,12 +19,8 @@ class CSVParser extends Parser
         $this->path = $path;
     }
 
-    public function parse() : void
+    public function parse() : PendingDispatch
     {
-        Excel::import(new CSVProductsImport($this->supplier), $this->path, null, \Maatwebsite\Excel\Excel::CSV)
-        ->chain([
-            new CleanupJob($this->path),
-        ]);
-
+        return (new CSVProductsImport($this->supplier))->queue($this->path, null, \Maatwebsite\Excel\Excel::CSV);
     }
 }

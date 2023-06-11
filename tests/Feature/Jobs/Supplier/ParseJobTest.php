@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Jobs\Supplier;
 
+use App\Jobs\Supplier\CleanupJob;
 use App\Jobs\Supplier\ParseJob;
 use App\Jobs\XmlSupplierParseJob;
 use App\Models\Supplier;
@@ -78,6 +79,15 @@ class ParseJobTest extends TestCase
         $job->handle();
 
         Excel::assertQueued(Storage::disk('import')->path($path));
+
+        /**
+         * This is impossible to test now unfortunately.
+         * ExcelFake::assertQueuedWithChain() tries looking up an anonymous class
+         * in the fake Queue which does not seem to work out. Further testing is needed.
+         */
+        // Excel::assertQueuedWithChain([
+        //     new CleanupJob($path),
+        // ]);
     }
 
     /**
@@ -101,9 +111,13 @@ class ParseJobTest extends TestCase
 
         $job->handle();
 
-        Bus::assertDispatched(XmlSupplierParseJob::class);
+        Bus::assertChained([
+            XmlSupplierParseJob::class,
+            CleanupJob::class,
+        ]);
     }
-       /**
+
+    /**
      * @test
      * @return void
      */
@@ -121,7 +135,7 @@ class ParseJobTest extends TestCase
         $path = $this->copyToImport($supplier->uri);
 
         $job = new ParseJob($supplier, $path);
-        
+
         $job->handle();
 
         Bus::assertNothingDispatched();

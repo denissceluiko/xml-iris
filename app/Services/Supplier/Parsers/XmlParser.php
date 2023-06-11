@@ -5,6 +5,7 @@ namespace App\Services\Supplier\Parsers;
 use App\Jobs\Supplier\CleanupJob;
 use App\Jobs\XmlSupplierParseJob;
 use App\Models\Supplier;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Service;
 
@@ -21,10 +22,8 @@ class XmlParser extends Parser
         $this->path = $path;
     }
 
-    public function parse() : void
+    public function parse() : PendingDispatch
     {
-        XmlSupplierParseJob::dispatch($this->supplier, $this->path)->chain([
-            new CleanupJob($this->path),
-        ]);
+        return XmlSupplierParseJob::dispatch($this->supplier, $this->path);
     }
 }

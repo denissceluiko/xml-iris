@@ -50,6 +50,9 @@ class ParseJob implements ShouldQueue
             return;
         }
 
-        $parser->parse();
+        $pending = $parser->parse();
+        $pending->onQueue('long-running-queue')->chain([
+            new CleanupJob($this->path),
+        ]);
     }
 }

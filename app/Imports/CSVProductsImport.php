@@ -8,6 +8,7 @@ use App\Traits\ChonkMeter;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
@@ -18,7 +19,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class CSVProductsImport implements ToCollection, ShouldQueue, WithChunkReading, WithHeadingRow, SkipsEmptyRows, WithCalculatedFormulas, WithColumnLimit
 {
-    use ChonkMeter;
+    use Importable, ChonkMeter;
 
     protected Supplier $supplier;
     protected int $columns;
