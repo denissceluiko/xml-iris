@@ -30,33 +30,41 @@ class ExtractTest extends TestCase
 
         $supplier = Supplier::factory()
                         ->config([
-                            'root_tag' => 'product',
-                            'product_tag' => 'products',
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
                             'source_type' => 'xls',
                         ])
                         ->productStructure($productStructure)
-                        ->hasProducts(1)
+                        ->hasProducts(1, [
+                            'ean' => '1651160484651',
+                        ])
                         ->create();
+
+        $product = $supplier->products()->first();
 
         $compiler = Compiler::factory()
                         ->fields($productStructure)
                         ->create();
 
         $processor = Processor::factory()
-                        ->supplier($supplier)
-                        ->compiler($compiler)
+                        ->for($supplier)
+                        ->for($compiler)
                         ->create();
 
         $processedProduct = ProcessedProduct::factory()
-                        ->product($supplier->products()->first())
-                        ->processor($processor)
+                        ->product($product)
+                        ->for($processor)
                         ->create();
 
         [$extractor, $batch] = (new Extract($processedProduct))->withFakeBatch();
         $extractor->handle();
 
-        $this->assertDatabaseHas('processed_products', [
-            'stale_level' => 1,
-        ]);
+        $processedProduct->refresh();
+
+        $this->assertEquals($product->ean, $processedProduct->ean);
+        $this->assertEquals(1, $processedProduct->stale_level);
+        $this->assertEquals([
+            '__last_pulled_at' => $product->last_pulled_at->toIsoString(),
+        ], $processedProduct->meta_data);
     }
 }

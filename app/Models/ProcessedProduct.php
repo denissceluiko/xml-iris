@@ -12,11 +12,12 @@ class ProcessedProduct extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['extracted_data', 'transformed_data'];
+    protected $fillable = ['extracted_data', 'transformed_data', 'meta_data'];
 
     protected $casts = [
         'extracted_data' => 'array',
         'transformed_data' => 'array',
+        'meta_data' => 'array',
     ];
 
     public static $staleness = [
@@ -45,6 +46,23 @@ class ProcessedProduct extends Model
         if (!in_array($level, self::$staleness)) return $this;
 
         $this->stale_level = array_search($level, self::$staleness);
+        return $this;
+    }
+
+    public function getMeta(string $key, mixed $default = null) : mixed
+    {
+        return $this->meta_data[$key] ?? $default;
+    }
+
+    public function setMeta(string|array $key, mixed $value = null) : self
+    {
+        if (is_string($key)) {
+            $values = [$key => $value];
+        } else {
+            $values = $key;
+        }
+
+        $this->meta_data = array_merge($this->meta_data, $values);
         return $this;
     }
 

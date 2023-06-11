@@ -22,7 +22,9 @@ class ProcessorFactory extends Factory
             'supplier_id' => Supplier::factory(),
             'compiler_id' => Compiler::factory(),
             'mappings' => function (array $attributes) {
-                return Compiler::find($attributes['compiler_id'])->fields;
+                $mappings = Compiler::find($attributes['compiler_id'])->fields;
+                $keys = array_keys($mappings);
+                return array_combine($keys, $keys);
             },
             'transformations' => function (array $attributes) {
                 $mappings = Compiler::find($attributes['compiler_id'])->fields;
