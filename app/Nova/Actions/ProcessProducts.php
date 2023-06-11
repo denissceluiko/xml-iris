@@ -27,7 +27,7 @@ class ProcessProducts extends Action
         $batch = [];
 
         foreach ($models as $model) {
-            $batch = new JobsProcessProducts($model);
+            $batch[] = new JobsProcessProducts($model);
         }
 
         Bus::batch($batch)
