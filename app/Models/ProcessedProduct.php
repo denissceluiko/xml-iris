@@ -62,7 +62,7 @@ class ProcessedProduct extends Model
             $values = $key;
         }
 
-        $this->meta_data = array_merge($this->meta_data, $values);
+        $this->meta_data = array_merge($this->meta_data ?? [], $values);
         return $this;
     }
 
