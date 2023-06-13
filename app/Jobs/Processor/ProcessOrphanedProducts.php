@@ -22,7 +22,7 @@ class ProcessOrphanedProducts implements ShouldQueue
 
     public function middleware() : array
     {
-        return [(new WithoutOverlapping($this->supplier->id))->dontRelease(60)];
+        return [(new WithoutOverlapping($this->supplier->id))->dontRelease()];
     }
 
     /**
