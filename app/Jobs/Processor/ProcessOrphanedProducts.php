@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 
@@ -18,6 +19,11 @@ class ProcessOrphanedProducts implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Supplier $supplier;
+
+    public function middleware() : array
+    {
+        return [(new WithoutOverlapping($this->supplier->id))->dontRelease(60)];
+    }
 
     /**
      * Create a new job instance.
