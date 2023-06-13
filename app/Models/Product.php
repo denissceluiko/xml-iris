@@ -28,6 +28,12 @@ class Product extends Model
         return Carbon::now()->diffInSeconds($this->last_pulled_at) < self::$abandonedAge;
     }
 
+    public function scopeOrphaned(Builder $query, Carbon $cutoff) : Builder
+    {
+        return $query->where('last_pulled_at', '<', $cutoff)
+                    ->orWhereNull('last_pulled_at');
+    }
+
     public function scopeAbandoned(Builder $query, int $age = null) : Builder
     {
         $age = $age ?? self::$abandonedAge;

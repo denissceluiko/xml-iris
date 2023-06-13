@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Jobs\Supplier;
 
+use App\Jobs\Processor\ProcessOrphanedProducts;
 use App\Jobs\Supplier\CleanupJob;
 use App\Jobs\Supplier\ParseJob;
 use App\Jobs\XmlSupplierParseJob;
@@ -114,6 +115,7 @@ class ParseJobTest extends TestCase
         Bus::assertChained([
             XmlSupplierParseJob::class,
             CleanupJob::class,
+            ProcessOrphanedProducts::class,
         ]);
     }
 

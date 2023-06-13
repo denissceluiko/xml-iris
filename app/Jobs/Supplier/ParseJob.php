@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Supplier;
 
+use App\Jobs\Processor\ProcessOrphanedProducts;
 use App\Models\Supplier;
 use App\Services\Supplier\Parsers\Parser;
 use App\Services\Supplier\ParseService;
@@ -53,6 +54,7 @@ class ParseJob implements ShouldQueue
         $pending = $parser->parse();
         $pending->onQueue('long-running-queue')->chain([
             new CleanupJob($this->path),
+            new ProcessOrphanedProducts($this->supplier),
         ]);
     }
 }

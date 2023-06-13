@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Supplier;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -29,6 +30,7 @@ class SupplierFactory extends Factory
             'structure' => function ($attributes) {
                 return $this->getStructure($attributes);
             },
+            'last_pulled_at' => null,
         ];
     }
 
@@ -36,6 +38,15 @@ class SupplierFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($uri) {
             return ['uri' => $uri];
+        });
+    }
+
+    public function pulledAt(Carbon $time = null) : self
+    {
+        $time = $time ?? Carbon::now();
+
+        return $this->state(function (array $attributes) use ($time) {
+            return ['last_pulled_at' => $time];
         });
     }
 

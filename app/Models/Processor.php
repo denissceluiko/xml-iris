@@ -41,6 +41,25 @@ class Processor extends Model
         return $this->hasManyThrough(CompiledProduct::class, ProcessedProduct::class);
     }
 
+    public function upsertMissing() : void
+    {
+        $products = $this->supplier->products()->select('id', 'ean')->get();
+
+        $processorId = $this->id;
+
+        $upserts = $products->map(function ($product) use ($processorId) {
+            return [
+                'product_id' => $product->id,
+                'ean' => $product->ean,
+                'processor_id' => $processorId,
+            ];
+        });
+
+        foreach ($upserts->chunk(500) as $chunk) {
+            $this->processedProducts()->upsert($chunk->toArray(), ['product_id']);
+        }
+    }
+
     protected static function booted()
     {
         static::updating(function (Processor $processor) {

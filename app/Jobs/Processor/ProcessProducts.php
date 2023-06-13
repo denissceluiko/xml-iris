@@ -50,7 +50,7 @@ class ProcessProducts implements ShouldQueue
     {
         if ( $this->batch()->canceled() ) return;
 
-        $this->upsertMissing();
+        $this->processor->upsertMissing();
 
         $this->logChonk();
         $count = $this->processor->processedProducts()->stale()->count();
@@ -68,24 +68,5 @@ class ProcessProducts implements ShouldQueue
             ->name('Product processor master')
             ->onQueue('long-running-queue')
             ->dispatch();
-    }
-
-    public function upsertMissing()
-    {
-        $products = $this->processor->supplier->products()->select('id', 'ean')->get();
-
-        $processorId = $this->processor->id;
-
-        $upserts = $products->map(function ($product) use ($processorId) {
-            return [
-                'product_id' => $product->id,
-                'ean' => $product->ean,
-                'processor_id' => $processorId,
-            ];
-        });
-
-        foreach ($upserts->chunk(500) as $chunk) {
-            $this->processor->processedProducts()->upsert($chunk->toArray(), ['product_id']);
-        }
     }
 }
