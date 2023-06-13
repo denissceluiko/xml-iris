@@ -3,6 +3,7 @@
 namespace Tests\Feature\Service;
 
 use App\Services\Processor\TransformerService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
@@ -130,6 +131,71 @@ class TransformerServiceTest extends TestCase
             'stock' => 123,
             'expression_one' => 2.82,
             'expression_two' => 115.62,
+        ], $result);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_handle_functions()
+    {
+        $this->travelTo(new Carbon('2023-06-13T15:50:00.000000Z'));
+
+        $transformer = new TransformerService([
+            'sku' => 'sku',
+            'stock' => 'stock',
+            'age' => 'age()',
+        ], [
+            'sku' => 'string',
+            'stock' => 'int',
+            'age' => 'int',
+        ], [
+            'sku' => '101010',
+            'stock' => '123',
+            '__last_pulled_at' => '2023-06-13T15:45:00.000000Z',
+        ]);
+
+        $result = $transformer->transform();
+
+        $this->assertEquals([
+            'sku' => '101010',
+            'stock' => 123,
+            'age' => 300,
+        ], $result);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_handle_functions_in_expressions()
+    {
+        $this->travelTo(new Carbon('2023-06-13T15:50:00.000000Z'));
+
+        $transformer = new TransformerService([
+            'sku' => 'sku',
+            'stock' => '["age()", ">", "200", "0", "stock"]',
+            'stock_2' => '["age()", ">", "400", "0", "stock"]',
+            'age' => 'age()',
+        ], [
+            'sku' => 'string',
+            'stock' => 'int',
+            'stock_2' => 'int',
+            'age' => 'int',
+        ], [
+            'sku' => '101010',
+            'stock' => '123',
+            '__last_pulled_at' => '2023-06-13T15:45:00.000000Z',
+        ]);
+
+        $result = $transformer->transform();
+
+        $this->assertEquals([
+            'sku' => '101010',
+            'stock' => 0,
+            'stock_2' => 123,
+            'age' => 300,
         ], $result);
     }
 

@@ -2,10 +2,13 @@
 
 namespace App\Services\Processor;
 
+use Carbon\Carbon;
 use FormulaParser\FormulaParser;
 
 class TransformerService
 {
+
+    protected static array $availableFunctions = ['age'];
 
     protected array $transformations;   // From Processor
     protected array $types;             // From Compiler
@@ -64,6 +67,8 @@ class TransformerService
             $replacement = $this->data[$name] ?? 0;
             $rule = str_replace($name, $replacement, $rule);
         }
+
+        $rule = $this->evaluateFunctions($rule);
 
         return $rule;
     }
@@ -132,7 +137,35 @@ class TransformerService
             return $this->isExpression($data[3]) ? $this->resolveExpression($data[3]) : $data[3];
         }
 
-
         return $this->isExpression($data[4]) ? $this->resolveExpression($data[4]) : $data[4];
+    }
+
+    public function evaluateFunctions(string $rule) : string
+    {
+        foreach (self::$availableFunctions as $candidate)
+        {
+            $rule = $this->evaluateFunction($candidate, $rule);
+        }
+
+        return $rule;
+    }
+
+    public function evaluateFunction(string $candidate, string $rule) : string
+    {
+        while (preg_match("/$candidate\((.*)\)/", $rule, $matches) === 1)
+        {
+            $function = 'function'.ucfirst($candidate);
+            $result = $this->$function($matches[1]);
+            $rule = str_replace($matches[0], $result, $rule);
+        }
+
+        return $rule;
+    }
+
+    public function functionAge(string $args = null) : string
+    {
+        if (!isset($this->data['__last_pulled_at'])) return '0';
+
+        return Carbon::now()->diffInSeconds(new Carbon($this->data['__last_pulled_at']));
     }
 }
