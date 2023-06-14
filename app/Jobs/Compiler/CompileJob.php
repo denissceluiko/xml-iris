@@ -39,7 +39,7 @@ class CompileJob implements ShouldQueue
 
         $processedProducts = $this->compiler->processedProducts()->select('ean')->distinct()->get();
 
-        $this->upsertMissing($processedProducts);
+        $this->compiler->upsertMissing($processedProducts);
 
         $CPCount = $this->compiler->compiledProducts()->stale()->count();
 
@@ -56,22 +56,6 @@ class CompileJob implements ShouldQueue
                 ->name('Compile products master')
                 ->onQueue('default')
                 ->dispatch();
-        }
-    }
-
-    public function upsertMissing(Collection $EANs)
-    {
-        $compilerId = $this->compiler->id;
-
-        $upserts = $EANs->map(function ($ean) use ($compilerId) {
-            return [
-                'compiler_id' => $compilerId,
-                'ean' => $ean->ean,
-            ];
-        });
-
-        foreach ($upserts->chunk(500) as $chunk) {
-            $this->compiler->compiledProducts()->upsert($chunk->toArray(), ['compiler_id', 'ean']);
         }
     }
 }

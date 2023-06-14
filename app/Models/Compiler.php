@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -19,6 +20,22 @@ class Compiler extends Model
     public function getFields()
     {
         return $this->fields;
+    }
+
+    public function upsertMissing(Collection $EANs)
+    {
+        $compilerId = $this->id;
+
+        $upserts = $EANs->map(function ($ean) use ($compilerId) {
+            return [
+                'compiler_id' => $compilerId,
+                'ean' => $ean->ean,
+            ];
+        });
+
+        foreach ($upserts->chunk(500) as $chunk) {
+            $this->compiledProducts()->upsert($chunk->toArray(), ['compiler_id', 'ean']);
+        }
     }
 
     public function processors() : HasMany
