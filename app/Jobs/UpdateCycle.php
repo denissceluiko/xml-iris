@@ -3,11 +3,12 @@
 namespace App\Jobs;
 
 use App\Jobs\Processor\ProcessProducts;
-use App\Jobs\Supplier\PullDispatchJob;
-use App\Models\Compiler;
+use App\Models\Supplier;
+use Illuminate\Bus\Batch;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -34,46 +35,50 @@ class UpdateCycle implements ShouldQueue
      */
     public function handle()
     {
-        foreach(Compiler::all() as $compiler)
-        {
-            $batch = array_merge(
-                $this->getSupplierPullJobs($compiler),
-                $this->getProcessProductsJobs($compiler),
-            );
+        $suppliers = Supplier::active()
+            ->outdated()
+            ->with(['processors'])
+            ->get();
 
-            // FYI: non default queue should be explicit when batching jobs.
-            Bus::batch($batch)
-                ->name("Update Cycle for compiler: {$compiler->name} ({$compiler->id})")
-                ->allowFailures()
-                ->onQueue('long-running-queue')
-                ->dispatch();
-        }
+        $batch = [
+            $this->getSupplierPullJobs($suppliers),
+            $this->getProcessProductsJobs($suppliers)
+        ];
+
+        Bus::batch($batch)
+            ->name("Update Cycle")
+            ->allowFailures()
+            ->onQueue('long-running-queue')
+            ->dispatch();
     }
 
-    public function getSupplierPullJobs(Compiler $compiler) : array
+    public function getSupplierPullJobs(Collection $suppliers) : array
     {
         $jobs = [];
 
-        // foreach ($compiler->processors as $processor) {
-        //     $jobs[] = new SupplierPull($processor->supplier);
-        // }
-
-        /**
-         * Maybe a temporary solution. PullDispacthJon could be fired once every
-         * 15 minutes or so on its own. Or maybe update cycle should be every 15 mins
-         * but then Export cycles should be adjusted to run explicitly after the
-         * update cycle.
-         */
-        $jobs[] = new PullDispatchJob();
+        foreach($suppliers as $supplier) {
+            $jobs[] = new SupplierPull($supplier);
+        }
 
         return $jobs;
     }
 
-    public function getProcessProductsJobs(Compiler $compiler) : array
+    public function getProcessProductsJobs(Collection $suppliers) : array
     {
         $jobs = [];
 
-        foreach ($compiler->processors as $processor) {
+        foreach ($suppliers as $supplier) {
+            $jobs = array_merge($jobs, $this->getProcessProductsJobsForSupplier($supplier));
+        }
+
+        return $jobs;
+    }
+
+    public function getProcessProductsJobsForSupplier(Supplier $supplier) : array
+    {
+        $jobs = [];
+
+        foreach ($supplier->processors as $processor) {
             $jobs[] = new ProcessProducts($processor);
         }
 

@@ -98,6 +98,11 @@ class Supplier extends Model
      *
      */
 
+    public function processors() : HasMany
+    {
+        return $this->hasMany(Processor::class);
+    }
+
     public function products() : HasMany
     {
         return $this->hasMany(Product::class);
