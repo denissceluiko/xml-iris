@@ -40,10 +40,11 @@ class UpdateCycle implements ShouldQueue
             ->with(['processors'])
             ->get();
 
-        $batch = [
-            $this->getSupplierPullJobs($suppliers),
-            $this->getProcessProductsJobs($suppliers)
-        ];
+        $batch = [];
+
+        foreach ($suppliers as $supplier) {
+            $batch[] = $this->getJobsForSupplier($supplier);
+        }
 
         Bus::batch($batch)
             ->name("Update Cycle")
@@ -52,31 +53,10 @@ class UpdateCycle implements ShouldQueue
             ->dispatch();
     }
 
-    public function getSupplierPullJobs(Collection $suppliers) : array
+    public function getJobsForSupplier(Supplier $supplier) : array
     {
         $jobs = [];
-
-        foreach($suppliers as $supplier) {
-            $jobs[] = new SupplierPull($supplier);
-        }
-
-        return $jobs;
-    }
-
-    public function getProcessProductsJobs(Collection $suppliers) : array
-    {
-        $jobs = [];
-
-        foreach ($suppliers as $supplier) {
-            $jobs = array_merge($jobs, $this->getProcessProductsJobsForSupplier($supplier));
-        }
-
-        return $jobs;
-    }
-
-    public function getProcessProductsJobsForSupplier(Supplier $supplier) : array
-    {
-        $jobs = [];
+        $jobs[] = new SupplierPull($supplier);
 
         foreach ($supplier->processors as $processor) {
             $jobs[] = new ProcessProducts($processor);

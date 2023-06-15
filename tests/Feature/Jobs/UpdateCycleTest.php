@@ -57,8 +57,8 @@ class UpdateCycleTest extends TestCase
                    $batch->queue() == 'long-running-queue' &&
                    $batch->jobs->count() == 2 &&
                    $batch->jobs[0][0] instanceof SupplierPull &&
-                   $batch->jobs[0][1] instanceof SupplierPull &&
-                   $batch->jobs[1][0] instanceof ProcessProducts &&
+                   $batch->jobs[0][1] instanceof ProcessProducts &&
+                   $batch->jobs[1][0] instanceof SupplierPull &&
                    $batch->jobs[1][1] instanceof ProcessProducts;
         });
     }
