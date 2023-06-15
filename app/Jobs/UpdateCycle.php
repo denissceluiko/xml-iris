@@ -46,6 +46,8 @@ class UpdateCycle implements ShouldQueue
             $batch[] = $this->getJobsForSupplier($supplier);
         }
 
+        if (empty($batch)) return;
+        
         Bus::batch($batch)
             ->name("Update Cycle")
             ->allowFailures()
