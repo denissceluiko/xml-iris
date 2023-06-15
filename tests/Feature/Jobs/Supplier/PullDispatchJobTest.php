@@ -35,14 +35,10 @@ class PullDispatchJobTest extends TestCase
 
         $this->travel(now());
 
-        $job = new PullDispatchJob();
+        [$job, $batch] = (new PullDispatchJob())->withFakeBatch();
         $job->handle();
 
-        Bus::assertBatchCount(1);
-        Bus::assertBatched(function(PendingBatch $batch) {
-            return $batch->name == 'Scheduled supplier pull' &&
-                   $batch->jobs->count() == 1;
-        });
+        $this->assertNotEmpty($batch->added);
     }
 
     /**
@@ -61,9 +57,9 @@ class PullDispatchJobTest extends TestCase
 
         $this->travel(now());
 
-        $job = new PullDispatchJob();
+        [$job, $batch] = (new PullDispatchJob())->withFakeBatch();
         $job->handle();
 
-        Bus::assertNothingBatched();
+        $this->assertEmpty($batch->added);
     }
 }

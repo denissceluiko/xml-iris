@@ -4,6 +4,7 @@ namespace App\Jobs\Supplier;
 
 use App\Jobs\SupplierPull;
 use App\Models\Supplier;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Bus;
 
 class PullDispatchJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function middleware()
     {
@@ -39,21 +40,14 @@ class PullDispatchJob implements ShouldQueue
      */
     public function handle()
     {
+        if ( $this->batch()->canceled() ) return;
+
         $suppliers = Supplier::active()
             ->outdated()
             ->get();
-            
-        $batch = [];
 
         foreach($suppliers as $supplier) {
-            $batch[] = new SupplierPull($supplier);
+            $this->batch()->add(new SupplierPull($supplier));
         }
-
-        if (empty($batch)) return;
-
-        Bus::batch($batch)
-            ->name('Scheduled supplier pull')
-            ->allowFailures()
-            ->dispatch();
     }
 }
