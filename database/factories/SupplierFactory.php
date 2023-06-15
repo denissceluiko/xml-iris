@@ -31,6 +31,7 @@ class SupplierFactory extends Factory
                 return $this->getStructure($attributes);
             },
             'last_pulled_at' => null,
+            'pull_interval' => null,
         ];
     }
 
@@ -47,6 +48,13 @@ class SupplierFactory extends Factory
 
         return $this->state(function (array $attributes) use ($time) {
             return ['last_pulled_at' => $time];
+        });
+    }
+
+    public function pullInterval(int $interval) : self
+    {
+        return $this->state(function (array $attributes) use ($interval) {
+            return ['pull_interval' => $interval];
         });
     }
 

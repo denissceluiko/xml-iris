@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Jobs\Processor\ProcessProducts;
+use App\Jobs\Supplier\PullDispatchJob;
 use App\Models\Compiler;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -53,9 +54,17 @@ class UpdateCycle implements ShouldQueue
     {
         $jobs = [];
 
-        foreach ($compiler->processors as $processor) {
-            $jobs[] = new SupplierPull($processor->supplier);
-        }
+        // foreach ($compiler->processors as $processor) {
+        //     $jobs[] = new SupplierPull($processor->supplier);
+        // }
+
+        /**
+         * Maybe a temporary solution. PullDispacthJon could be fired once every
+         * 15 minutes or so on its own. Or maybe update cycle should be every 15 mins
+         * but then Export cycles should be adjusted to run explicitly after the
+         * update cycle.
+         */
+        $jobs[] = new PullDispatchJob();
 
         return $jobs;
     }

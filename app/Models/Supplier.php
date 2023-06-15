@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,7 +12,7 @@ class Supplier extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['last_pulled_at'];
+    protected $fillable = ['last_pulled_at', 'pull_interval'];
 
     protected static $configKeys = [
         'xmlns' => 'optional',
@@ -76,10 +77,26 @@ class Supplier extends Model
     }
 
     /**
-     * Relationships
+     * Scopes
      *
      */
 
+    public function scopeOutdated(Builder $query)
+    {
+        return $query->where(function (Builder $query) {
+            $query->whereRaw('last_pulled_at < DATE_SUB(NOW(), INTERVAL `pull_interval` SECOND)')
+                  ->orWhere('last_pulled_at', null);
+        });
+    }
+
+    public function scopeActive(Builder $query)
+    {
+        return $query->where('pull_interval', '>', 0);
+    }
+     /**
+     * Relationships
+     *
+     */
 
     public function products() : HasMany
     {

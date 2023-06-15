@@ -35,7 +35,7 @@ class UpdateCycleTest extends TestCase
         Bus::assertBatched(function (PendingBatch $batch) use ($compiler) {
             return $batch->name == "Update Cycle for compiler: {$compiler->name} ({$compiler->id})" &&
                    $batch->queue() == 'long-running-queue' &&
-                   $batch->jobs->count() == 4;
+                   $batch->jobs->count() == 3; // 2 processors + PullDispatch
         });
     }
 

@@ -49,6 +49,10 @@ class Supplier extends Resource
             ID::make(__('ID'), 'id')->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
             Text::make(__('URI'), 'uri'),
+            Text::make(__('Pull interval'), 'pull_interval')
+                ->help(__('Interval in seconds'))
+                ->rules('required')
+                ->hideFromIndex(),
 
             KeyValue::make(__('Credentials'), 'credentials')->default([
                 'login' => '',
