@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->job(new UpdateCycle)
-                ->hourlyAt(15)
+                ->everyTenMinutes()
                 ->withoutOverlapping();
 
         $schedule->job(new ExportCycle)
