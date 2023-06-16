@@ -62,4 +62,31 @@ class UpdateCycleTest extends TestCase
                    $batch->jobs[1][1] instanceof ProcessProducts;
         });
     }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function will_not_dispatch_update_cycle_if_nothing_has_to_be_updated()
+    {
+        Bus::fake();
+
+        $compiler = Compiler::factory()
+            ->create();
+
+        Processor::factory()
+            ->for($compiler)
+            ->for(Supplier::factory()
+                ->pullInterval(3600)
+                ->pulledAt(now())
+            )
+            ->create();
+
+        $this->assertEquals(1, Supplier::active()->count());
+
+        $job = new UpdateCycle();
+        $job->handle();
+
+        Bus::assertNothingBatched();
+    }
 }
