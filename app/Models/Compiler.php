@@ -14,8 +14,11 @@ class Compiler extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['last_compiled_at'];
+    
     protected $casts = [
         'fields' => 'array',
+        'last_compiled_at' => 'datetime',
     ];
 
     public function getFields()

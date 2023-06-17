@@ -64,5 +64,9 @@ class CompileJob implements ShouldQueue
             ->name('Compile products master')
             ->onQueue('default')
             ->dispatch();
+
+        $this->compiler->update([
+            'last_compiled_at' => now(),
+        ]);
     }
 }

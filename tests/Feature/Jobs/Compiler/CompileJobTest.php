@@ -37,12 +37,15 @@ class CompileJobTest extends TestCase
         [$job, $batch] = (new CompileJob($compiler))->withFakeBatch();
         $job->handle();
 
+        $compiler->refresh();
+        $this->assertNull($compiler->last_compiled_at);
+
         Bus::assertNothingBatched();
     }
 
     /**
      * Will create batch compilers and upsert missing compiled products
-     * 
+     *
      * @test
      * @return void
      */
@@ -66,6 +69,9 @@ class CompileJobTest extends TestCase
 
         [$job, $batch] = (new CompileJob($compiler))->withFakeBatch();
         $job->handle();
+
+        $compiler->refresh();
+        $this->assertNotNull($compiler->last_compiled_at);
 
         // Checks if missing records are upserted
         $this->assertDatabaseCount('compiled_products', 20);
