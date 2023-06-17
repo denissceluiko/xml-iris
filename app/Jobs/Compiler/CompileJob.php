@@ -44,7 +44,14 @@ class CompileJob implements ShouldQueue
     {
         if ( $this->batch()->canceled() ) return;
 
-        $processedProducts = $this->compiler->processedProducts()->select('ean')->distinct()->get();
+        $processedProducts = $this->compiler->processedProducts()
+            ->select('ean')
+            ->distinct()
+            ->whereNotIn('ean', function($query) {
+                $query->select('ean')
+                    ->from('compiled_products')
+                    ->where('compiler_id', 1);
+            })->get();
 
         $this->compiler->upsertMissing($processedProducts);
 
