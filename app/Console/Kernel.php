@@ -23,7 +23,7 @@ class Kernel extends ConsoleKernel
                 ->withoutOverlapping();
 
         $schedule->job(new ExportCycle)
-                ->hourlyAt(45)
+                ->everyTenMinutes()
                 ->withoutOverlapping();
 
         $schedule->job(new PurgeAbandonedProducts)

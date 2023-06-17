@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,19 @@ class Compiler extends Model
         foreach ($upserts->chunk(500) as $chunk) {
             $this->compiledProducts()->upsert($chunk->toArray(), ['compiler_id', 'ean']);
         }
+    }
+
+    public function scopeActive(Builder $query) : Builder
+    {
+        return $query->where('interval', '>', 0);
+    }
+
+    public function scopeOutdated(Builder $query) : Builder
+    {
+        return $query->where(function (Builder $query) {
+            $query->whereRaw('`last_compiled_at` < DATE_SUB(NOW(), INTERVAL `interval` SECOND)')
+            ->orWhere('last_compiled_at', null);
+        });
     }
 
     public function processors() : HasMany

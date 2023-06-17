@@ -35,15 +35,22 @@ class ExportCycle implements ShouldQueue
      */
     public function handle()
     {
+        $compilers = Compiler::active()
+            ->outdated()
+            ->orderBy('last_compiled_at', 'asc')
+            ->get();
+
         $batch = [];
 
-        foreach(Compiler::all() as $compiler)
+        foreach($compilers as $compiler)
         {
             $batch[] = array_merge(
                 [new CompileJob($compiler)],
                 $this->getExportJobs($compiler),
             );
         }
+
+        if (empty($batch)) return;
 
         Bus::batch($batch)
             ->name('Export Cycle')

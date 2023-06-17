@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 
@@ -18,6 +19,12 @@ class CompileJob implements ShouldQueue
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Compiler $compiler;
+
+    public function middleware()
+    {
+        return [ (new WithoutOverlapping($this->compiler->id))->releaseAfter(180)->expireAfter($this->compiler->interval - 1) ];
+    }
+
     /**
      * Create a new job instance.
      *
@@ -51,11 +58,11 @@ class CompileJob implements ShouldQueue
             $batch[] = new CompileBatchJob($this->compiler, $i, $batchSize);
         }
 
-        if (!empty($batch)) {
-            Bus::batch($batch)
-                ->name('Compile products master')
-                ->onQueue('default')
-                ->dispatch();
-        }
+        if (empty($batch)) return;
+
+        Bus::batch($batch)
+            ->name('Compile products master')
+            ->onQueue('default')
+            ->dispatch();
     }
 }

@@ -28,6 +28,8 @@ class ExportCycleTest extends TestCase
         $compiler = Compiler::factory()
             ->name('Test compiler')
             ->hasExports(1)
+            ->interval(3600)
+            ->compiledAt(now()->subMinutes(61))
             ->create();
 
         $job = new ExportCycle();
@@ -47,17 +49,17 @@ class ExportCycleTest extends TestCase
      * @test
      * @return void
      */
-    public function will_prepare_and_dispatch_export_cycle_for_multiple_compilers()
+    public function can_handle_first_time_compilation()
     {
         Bus::fake();
 
         $compiler = Compiler::factory()
-            ->state(new Sequence([
-                'name' => 'Test compiler 1',
-                'name' => 'Test compiler 2',
-            ]))
-            ->hasExports(2)
-            ->count(2)
+            ->name('Test compiler')
+            ->hasExports(1)
+            ->interval(3600)
+            ->state([
+                'last_compiled_at' => null,
+            ])
             ->create();
 
         $job = new ExportCycle();
@@ -67,11 +69,30 @@ class ExportCycleTest extends TestCase
         Bus::assertBatched(function (PendingBatch $batch) use ($compiler) {
             return $batch->name == 'Export Cycle' &&
                    $batch->queue() == 'long-running-queue' &&
-                   $batch->jobs->count() == 2 &&
+                   $batch->jobs->count() == 1 &&
                    $batch->jobs[0][0] instanceof CompileJob &&
-                   $batch->jobs[0][1] instanceof ExportJob &&
-                   $batch->jobs[1][0] instanceof CompileJob &&
-                   $batch->jobs[1][1] instanceof ExportJob;
+                   $batch->jobs[0][1] instanceof ExportJob;
         });
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function will_not_dispatch_export_cycle_before_its_time()
+    {
+        Bus::fake();
+
+        $compiler = Compiler::factory()
+            ->name('Test compiler')
+            ->hasExports(1)
+            ->interval(3600)
+            ->compiledAt(now()->subMinutes(45))
+            ->create();
+
+        $job = new ExportCycle();
+        $job->handle();
+
+        Bus::assertNothingBatched();
     }
 }
