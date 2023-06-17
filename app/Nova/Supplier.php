@@ -10,6 +10,7 @@ use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 
 class Supplier extends Resource
@@ -49,8 +50,12 @@ class Supplier extends Resource
             ID::make(__('ID'), 'id')->sortable(),
             Text::make(__('Name'), 'name')->sortable(),
             Text::make(__('URI'), 'uri'),
-            Text::make(__('Pull interval'), 'pull_interval')
-                ->help(__('Interval in seconds'))
+            Number::make(__('Pull interval'), 'pull_interval')
+                ->hideFromIndex()
+                ->min(0)
+                ->max(86400)
+                ->step(1)
+                ->help(__('Time in seconds. 0 = inactive.'))
                 ->rules('required')
                 ->hideFromIndex(),
 

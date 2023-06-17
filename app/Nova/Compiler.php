@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 
 class Compiler extends Resource
@@ -49,6 +50,13 @@ class Compiler extends Resource
                 'ean' => 'string'
             ])->keyLabel(__('Field'))->valueLabel(__('Type')),
             Text::make(__('Rules'), 'rules')->hideFromIndex(),
+            Number::make(__('Compilation interval'), 'interval')
+                ->hideFromIndex()
+                ->min(0)
+                ->max(86400)
+                ->step(1)
+                ->help(__('Time in seconds. 0 = inactive.'))
+                ->rules('required'),
             HasMany::make(__('Processors')),
             HasMany::make(__('Exports'), 'exports'),
             HasMany::make(__('Compiled products'), 'compiledProducts'),
