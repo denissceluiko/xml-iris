@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,7 +44,14 @@ class Processor extends Model
 
     public function upsertMissing() : void
     {
-        $products = $this->supplier->products()->select('id', 'ean')->get();
+        $products = $this->supplier->products()
+            ->select('id', 'ean')
+            ->whereNotIn('ean', function (Builder $query) {
+                $query->select('ean')
+                    ->from('processed_products')
+                    ->where('processor_id', $this->id);
+            })
+            ->get();
 
         $processorId = $this->id;
 
