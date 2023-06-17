@@ -37,7 +37,7 @@ class UpdateCycle implements ShouldQueue
     {
         $suppliers = Supplier::active()
             ->outdated()
-            ->with(['processors'])
+            ->with(['processors', 'processors.compiler'])
             ->get();
 
         $batch = [];
@@ -47,7 +47,7 @@ class UpdateCycle implements ShouldQueue
         }
 
         if (empty($batch)) return;
-        
+
         Bus::batch($batch)
             ->name("Update Cycle")
             ->allowFailures()
@@ -61,6 +61,7 @@ class UpdateCycle implements ShouldQueue
         $jobs[] = new SupplierPull($supplier);
 
         foreach ($supplier->processors as $processor) {
+            if (! $processor->compiler->isActive()) continue;
             $jobs[] = new ProcessProducts($processor);
         }
 

@@ -39,6 +39,11 @@ class Compiler extends Model
         }
     }
 
+    public function isActive() : bool
+    {
+        return $this->interval > 0;
+    }
+
     public function scopeActive(Builder $query) : Builder
     {
         return $query->where('interval', '>', 0);

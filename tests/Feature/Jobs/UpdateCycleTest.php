@@ -28,6 +28,7 @@ class UpdateCycleTest extends TestCase
         Bus::fake();
 
         $compiler = Compiler::factory()
+            ->interval(3600)
             ->create();
 
         Processor::factory()
@@ -88,5 +89,48 @@ class UpdateCycleTest extends TestCase
         $job->handle();
 
         Bus::assertNothingBatched();
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function will_dispatch_product_processing_for_processor_only_if_its_compiler_is_active()
+    {
+        Bus::fake();
+
+        // Outdated supplier
+        $supplier = Supplier::factory()
+            ->pullInterval(3600)
+            ->pulledAt(now()->subMinutes(61))
+            ->create();
+
+        // Inactive compiler
+        $compilerInactive = Compiler::factory()
+            ->interval(0)
+            ->create();
+
+        Processor::factory()
+            ->for($compilerInactive)
+            ->for($supplier)
+            ->create();
+
+        // Active compiler
+        $compilerActive = Compiler::factory()
+            ->interval(3600)
+            ->create();
+
+        Processor::factory()
+            ->for($compilerActive)
+            ->for($supplier)
+            ->create();
+
+        $job = new UpdateCycle();
+        $job->handle();
+
+        Bus::assertBatched(function(PendingBatch $batch) {
+            return $batch->jobs->count() == 1 &&
+                count($batch->jobs[0]) == 2;
+        });
     }
 }
