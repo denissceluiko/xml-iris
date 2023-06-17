@@ -34,6 +34,13 @@ class CompiledProductFactory extends Factory
         });
     }
 
+    public function processedProduct(?ProcessedProduct $product) : self
+    {
+        return $this->state(function ($attributes) use ($product) {
+            return ['processed_product_id' => $product];
+        });
+    }
+
     public function data(array $data) : self
     {
         return $this->state(function ($attributes) use ($data) {

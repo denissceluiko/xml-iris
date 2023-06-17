@@ -43,4 +43,9 @@ class CompiledProduct extends Model
     {
         return $query->where('stale_level', '>', $level);
     }
+
+    public function scopeOrphaned(Builder $query) : Builder
+    {
+        return $query->where('processed_product_id', null);
+    }
 }
