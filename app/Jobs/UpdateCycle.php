@@ -37,7 +37,7 @@ class UpdateCycle implements ShouldQueue
     {
         $suppliers = Supplier::active()
             ->outdated()
-            ->with(['processors', 'processors.compiler'])
+            ->with(['processors.compiler'])
             ->get();
 
         $batch = [];
