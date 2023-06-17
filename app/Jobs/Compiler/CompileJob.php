@@ -5,6 +5,7 @@ namespace App\Jobs\Compiler;
 use App\Models\Compiler;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
@@ -47,10 +48,10 @@ class CompileJob implements ShouldQueue
         $processedProducts = $this->compiler->processedProducts()
             ->select('ean')
             ->distinct()
-            ->whereNotIn('ean', function($query) {
+            ->whereNotIn('ean', function(Builder $query) {
                 $query->select('ean')
                     ->from('compiled_products')
-                    ->where('compiler_id', 1);
+                    ->where('compiler_id', $this->compiler->id);
             })->get();
 
         $this->compiler->upsertMissing($processedProducts);
