@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Nova\Actions\CompileProducts;
+use App\Nova\Metrics\CompiledProducts;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
@@ -71,7 +72,9 @@ class Compiler extends Resource
      */
     public function cards(Request $request)
     {
-        return [];
+        return [
+            (new CompiledProducts)->onlyOnDetail(),
+        ];
     }
 
     /**
