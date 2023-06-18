@@ -41,7 +41,7 @@ class CompiledProducts extends Trend
      */
     public function name()
     {
-        return __('Compiled products');
+        return __('New products');
     }
 
     /**
