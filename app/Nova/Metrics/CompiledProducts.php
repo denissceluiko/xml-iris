@@ -16,7 +16,7 @@ class CompiledProducts extends Trend
      */
     public function calculate(NovaRequest $request)
     {
-        return $this->countByDays($request, CompiledProduct::class);
+        return $this->countByDays($request, CompiledProduct::where('compiler_id', $request->resourceId));
     }
 
     /**
