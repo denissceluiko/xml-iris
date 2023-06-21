@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Jobs\ExportCycle;
+use App\Jobs\Maintenance\ProcessForgottenStaleProducts;
 use App\Jobs\Maintenance\PurgeAbandonedProducts;
 use App\Jobs\UpdateCycle;
 use Illuminate\Console\Scheduling\Schedule;
@@ -28,6 +29,9 @@ class Kernel extends ConsoleKernel
 
         $schedule->job(new PurgeAbandonedProducts)
                 ->everyThreeHours();
+
+        $schedule->job(new ProcessForgottenStaleProducts)
+                ->hourly();
 
         $schedule->command('horizon:snapshot')->everyFiveMinutes();
         $schedule->command('queue:prune-batches --hours=12 --unfinished=168 --cancelled=168')->daily();
