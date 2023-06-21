@@ -97,6 +97,7 @@ EOF;
         $fields = [
             'ean' => 'string',
             'price' => 'float',
+            'currency' => 'string',
         ];
 
         $compiler = Compiler::factory()
@@ -104,12 +105,20 @@ EOF;
                     ->has(CompiledProduct::factory()
                         ->data([
                             'ean' => '12345',
+                            'currency' => 'EUR',
                             'price' => 123.45,
                         ])
                         ->count(1)
                     )
                     ->has(Export::factory()
                         ->xml()
+                        ->mappings([
+                            'ean' => 'ean',
+                            'price' => [
+                                'value' => 'price',
+                                'currency' => 'currency',
+                            ],
+                        ])
                     )
                     ->create();
 
@@ -121,7 +130,62 @@ EOF;
 
         $expected =<<<EOF
 <?xml version="1.0" encoding="UTF-8"?>
-<products><product><ean>12345</ean><price>123.45</price></product></products>
+<products><product><ean>12345</ean><price><value>123.45</value><currency>EUR</currency></price></product></products>
+
+EOF;
+        $this->assertEquals($expected, Storage::disk('export')->get($filename));
+
+        Storage::disk('export')->delete($filename);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_handle_product_attributes()
+    {
+        $filename = 'xml-export.xml';
+
+        $fields = [
+            'ean' => 'string',
+            'price' => 'float',
+            'currency' => 'string',
+        ];
+
+        $compiler = Compiler::factory()
+                    ->fields($fields)
+                    ->has(CompiledProduct::factory()
+                        ->data([
+                            'ean' => '12345',
+                            'currency' => 'EUR',
+                            'price' => 123.45,
+                        ])
+                        ->count(1)
+                    )
+                    ->has(Export::factory()
+                        ->xml()
+                        ->mappings([
+                            'ean' => 'ean',
+                            'price' => [
+                                'name' => 'price',
+                                'attributes' => [
+                                    'value' => 'price',
+                                    'currency' => 'currency',
+                                ]
+                            ],
+                        ])
+                    )
+                    ->create();
+
+        $job = new CompiledProductExportJob($compiler->exports->first(), $filename, 'export');
+
+        $job->handle();
+
+        $this->assertTrue(Storage::disk('export')->exists($filename));
+
+        $expected =<<<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<products><product><ean>12345</ean><price value="123.45" currency="EUR"/></product></products>
 
 EOF;
         $this->assertEquals($expected, Storage::disk('export')->get($filename));

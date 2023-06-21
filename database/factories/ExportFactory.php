@@ -54,6 +54,13 @@ class ExportFactory extends Factory
         });
     }
 
+    public function mappings(array $mappings) : self
+    {
+        return $this->state(function ($attributes) use ($mappings) {
+            return ['mappings' => $mappings];
+        });
+    }
+
     public function path(string $path) : self
     {
         return $this->state(function ($attributes) use ($path) {
