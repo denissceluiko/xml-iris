@@ -10,8 +10,10 @@ use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use Sabre\Xml\Writer;
 use XMLWriter;
 
 class CompiledProductExportJob implements ShouldQueue
@@ -22,6 +24,11 @@ class CompiledProductExportJob implements ShouldQueue
     protected string $path;
     protected string $disk;
     protected XMLWriter $writer;
+
+    public function middleware()
+    {
+        return [ (new WithoutOverlapping($this->export->id))->expireAfter(600)->dontRelease() ];
+    }
 
     /**
      * Create a new job instance.
@@ -90,12 +97,35 @@ class CompiledProductExportJob implements ShouldQueue
 
     protected function writeProduct(CompiledProduct $product)
     {
-        $this->writer->startElement($this->export->config['product_tag']);
+        $swriter = new Writer();
+        $swriter->openMemory();
+        $swriter->setIndent(false);
 
-        foreach($this->export->mappings as $source => $destination) {
-            $this->writer->writeElement($destination, $product->data[$source] ?? '');
-        }
+        $filling = $this->export->mappings;
+        $swriter->writeElement(
+            $this->export->config['product_tag'],
+            $this->fillMappings($product, $filling)
+        );
 
-        $this->writer->endElement();
+        $this->writer->writeRaw($swriter->outputMemory());
+    }
+
+    protected function fillMappings(CompiledProduct &$product, array &$mappings) : array
+    {
+        array_walk($mappings, function (&$value, $key, $product) {
+            if (is_array($value)) {
+                $value = $this->fillMappings($product, $value);
+                return;
+            }
+
+            $value = $this->getValue($product, $value);
+        }, $product);
+
+        return $mappings;
+    }
+
+    protected function getValue(CompiledProduct $product, $key) : ?string
+    {
+        return $product->data[$key] ?? null;
     }
 }
