@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Nova\Actions\CompileProducts;
 use App\Nova\Metrics\CompiledProducts;
 use App\Nova\Metrics\ProductsBySource;
+use App\Nova\Metrics\StaleProductsByProcessor;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
@@ -76,6 +77,7 @@ class Compiler extends Resource
         return [
             (new CompiledProducts)->onlyOnDetail(),
             (new ProductsBySource)->onlyOnDetail(),
+            (new StaleProductsByProcessor)->onlyOnDetail(),
         ];
     }
 
