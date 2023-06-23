@@ -35,7 +35,7 @@ class StaleProductsByProcessor extends Partition
      */
     public function cacheFor()
     {
-        return now()->addMinutes(30);
+        return now()->addMinutes(5);
     }
 
 
