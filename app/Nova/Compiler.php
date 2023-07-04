@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Nova\Actions\CompileProducts;
+use App\Nova\Actions\CompileProductsFull;
 use App\Nova\Metrics\CompiledProducts;
 use App\Nova\Metrics\ProductsBySource;
 use App\Nova\Metrics\StaleProductsByProcessor;
@@ -113,6 +114,7 @@ class Compiler extends Resource
     {
         return [
             CompileProducts::make(),
+            CompileProductsFull::make(),
         ];
     }
 }

@@ -20,17 +20,19 @@ class CompileBatchJob implements ShouldQueue
     protected Compiler $compiler;
     protected int $offset;
     protected int $count;
+    protected bool $full = false;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(Compiler $compiler, int $offset, int $count)
+    public function __construct(Compiler $compiler, int $offset, int $count, bool $full = false)
     {
         $this->compiler = $compiler;
         $this->offset = $offset;
         $this->count = $count;
+        $this->full = $full;
     }
 
     /**
@@ -40,13 +42,18 @@ class CompileBatchJob implements ShouldQueue
      */
     public function handle()
     {
-        $compiledProducts = $this->compiler
-                                ->compiledProducts()
-                                ->select('ean')
-                                ->stale()
-                                ->offset($this->offset)
-                                ->limit($this->count)
-                                ->get();
+        $builder = $this->compiler
+            ->compiledProducts()
+            ->select('ean');
+
+        if ($this->full === false) {
+            $builder = $builder->stale();
+        }
+
+        $compiledProducts = $builder
+            ->offset($this->offset)
+            ->limit($this->count)
+            ->get();
 
         $batch = [];
 

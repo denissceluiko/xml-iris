@@ -20,6 +20,7 @@ class CompileJob implements ShouldQueue
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected Compiler $compiler;
+    protected bool $full = false;
 
     public function middleware()
     {
@@ -31,9 +32,10 @@ class CompileJob implements ShouldQueue
      *
      * @return void
      */
-    public function __construct(Compiler $compiler)
+    public function __construct(Compiler $compiler, bool $full = false)
     {
         $this->compiler = $compiler;
+        $this->full = $full;
     }
 
     /**
@@ -56,14 +58,20 @@ class CompileJob implements ShouldQueue
 
         $this->compiler->upsertMissing($processedProducts);
 
-        $CPCount = $this->compiler->compiledProducts()->stale()->count();
+        $builder = $this->compiler->compiledProducts();
+
+        if ($this->full === false) {
+            $builder = $builder->stale();
+        }
+
+        $CPCount = $builder->count();
 
         $batch = [];
         $batchSize = 500;
 
         for ($i=0; $i<$CPCount; $i+=$batchSize)
         {
-            $batch[] = new CompileBatchJob($this->compiler, $i, $batchSize);
+            $batch[] = new CompileBatchJob($this->compiler, $i, $batchSize, $this->full);
         }
 
         if (empty($batch)) return;
