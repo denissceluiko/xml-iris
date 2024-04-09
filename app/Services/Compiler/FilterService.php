@@ -86,6 +86,7 @@ class FilterService
             return $value < $rules[2];
         }
 
+        // TODO: this should either throw an exception to be logged or be prevented somewhere upstream so illegal comparisons can not be saved.
         return false;
     }
 

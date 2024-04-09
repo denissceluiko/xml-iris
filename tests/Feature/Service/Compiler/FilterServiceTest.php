@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Services\Compiler;
+namespace Tests\Feature\Service\Compiler;
 
 use App\Models\Compiler;
 use App\Models\ProcessedProduct;
@@ -307,6 +307,6 @@ class FilterServiceTest extends TestCase
      */
     public function can_handle_malformed_rules()
     {
-        // TBI for Services/Compiler/FilterService::parseRule(). 
+        // TBI for Services/Compiler/FilterService::parseRule().
     }
 }

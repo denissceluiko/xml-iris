@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Supplier;
+namespace Tests\Feature\Jobs\Supplier;
 
 use App\Jobs\Supplier\ParseJob;
 use App\Jobs\SupplierPull;

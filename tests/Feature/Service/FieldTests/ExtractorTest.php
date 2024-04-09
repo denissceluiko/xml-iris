@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Service\ExtractorFieldTests;
+namespace Tests\Feature\Service\FieldTests;
 
 use App\Services\Processor\ExtractorService;
 use Illuminate\Foundation\Testing\WithFaker;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Service\Supplier\Parsers;
+namespace Tests\Feature\Jobs\Supplier;
 
 use App\Jobs\Product\UpsertJob;
 use App\Jobs\XmlSupplierParseJob;
