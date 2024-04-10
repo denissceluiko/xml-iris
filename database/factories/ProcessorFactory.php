@@ -31,6 +31,7 @@ class ProcessorFactory extends Factory
                 $keys = array_keys($mappings);
                 return array_combine($keys, $keys);
             },
+            'enabled' => true,
         ];
     }
 
@@ -43,6 +44,12 @@ class ProcessorFactory extends Factory
     public function compiler(Compiler $compiler) {
         return $this->state(function ($attributes) use ($compiler) {
             return ['compiler_id' => $compiler];
+        });
+    }
+
+    public function disabled() {
+        return $this->state(function ($attributes) {
+            return ['enabled' => false];
         });
     }
 }

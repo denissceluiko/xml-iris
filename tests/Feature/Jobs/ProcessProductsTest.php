@@ -61,4 +61,43 @@ class ProcessProductsTest extends TestCase
                     $pendingBatch->jobs->count() == 1 ;
         });
     }
+
+    /**
+     * @test
+     */
+    public function will_not_process_disabled_processors()
+    {
+
+        $compiler = Compiler::factory()
+                        ->fields([
+                            'ean' => 'ean',
+                            'name' => 'string',
+                            'price' => 'float',
+                        ])
+                        ->create();
+
+        $supplier = Supplier::factory()
+                        ->config([
+                            'root_tag' => 'product',
+                            'product_tag' => 'products',
+                            'source_type' => 'xls',
+                        ])
+                        ->productStructure($compiler->fields)
+                        ->hasProducts(5)
+                        ->create();
+
+        $processor = Processor::factory()
+                        ->supplier($supplier)
+                        ->compiler($compiler)
+                        ->disabled()
+                        ->create();
+
+        Bus::fake();
+        [$job, $batch] = (new ProcessProducts($processor))->withFakeBatch();
+
+        $job->handle();
+        $this->assertDatabaseCount('processed_products', 0);
+
+        Bus::assertNothingBatched();
+    }
 }

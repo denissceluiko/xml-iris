@@ -40,7 +40,17 @@ class FilterJob implements ShouldQueue
     {
         if ($this->batch()->canceled()) return;
 
-        $products = $this->compiler->processedProducts()->ean($this->ean)->get();
+        $products = $this->compiler
+            ->processedProducts()
+            ->whereIn('processor_id', function ($query) {
+                $query->select('id')
+                    ->from('processors')
+                    ->where('enabled', '1')
+                    ->where('compiler_id', $this->compiler->id)
+                    ->get();
+            })
+            ->ean($this->ean)
+            ->get();
 
         $filtered = (new FilterService($this->compiler))->filter($products);
 

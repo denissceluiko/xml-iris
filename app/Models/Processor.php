@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,7 @@ class Processor extends Model
         'mappings' => 'array',
         'transformations' => 'array',
         'last_run_at' => 'datetime',
+        'enabled' => 'boolean',
     ];
 
     public function compiler() : BelongsTo
@@ -68,6 +70,21 @@ class Processor extends Model
         }
     }
 
+    public function disabled(): bool
+    {
+        return !$this->enabled;
+    }
+
+    public function scopeEnabled(EloquentBuilder $query): EloquentBuilder
+    {
+        return $query->where('enabled', true);
+    }
+
+    public function scopeDisabled(EloquentBuilder $query): EloquentBuilder
+    {
+        return $query->where('enabled', false);
+    }
+
     protected static function booted()
     {
         static::updating(function (Processor $processor) {
@@ -76,6 +93,10 @@ class Processor extends Model
                 $processor->compiledProducts()->update(['compiled_products.stale_level' => 1]);
             } else if ($processor->isDirty('transformations')) {
                 $processor->processedProducts()->update(['processed_products.stale_level' => 1]);
+                $processor->compiledProducts()->update(['compiled_products.stale_level' => 1]);
+            }
+
+            if ($processor->isDirty('enabled')) {
                 $processor->compiledProducts()->update(['compiled_products.stale_level' => 1]);
             }
         });

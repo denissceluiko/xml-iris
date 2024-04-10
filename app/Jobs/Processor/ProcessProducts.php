@@ -49,6 +49,7 @@ class ProcessProducts implements ShouldQueue
     public function handle()
     {
         if ( $this->batch()->canceled() ) return;
+        if ( $this->processor->disabled() ) return;
 
         $this->processor->upsertMissing();
 
