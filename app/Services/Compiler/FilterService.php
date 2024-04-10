@@ -51,10 +51,11 @@ class FilterService
     protected function order(Collection &$products, array $args)
     {
         $products = $products->sort(function ($left, $right) use ($args) {
+            // collection->sort() uses uasort() which expects int as a return value.
             if ($args[1] == 'desc')
-                return $right->transformed_data[$args[0]] - $left->transformed_data[$args[0]];
+                return ( $left->transformed_data[$args[0]] <=> $right->transformed_data[$args[0]]) * -1;
 
-            return $left->transformed_data[$args[0]] - $right->transformed_data[$args[0]];
+            return $left->transformed_data[$args[0]] <=> $right->transformed_data[$args[0]];
         });
 
     }

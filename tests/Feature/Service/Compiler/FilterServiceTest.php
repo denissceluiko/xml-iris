@@ -104,6 +104,42 @@ class FilterServiceTest extends TestCase
         $this->assertEquals(36, $filtered->transformed_data['delivery_time']);
     }
 
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_filter_products_by_float_with_order_rule()
+    {
+
+        $fields = [
+            'ean' => 'string',
+            'price' => 'float',
+            'delivery_time' => 'int',
+        ];
+
+        $compiler = Compiler::factory()
+                        ->fields($fields)
+                        ->rules('order("price", "asc")')
+                        ->create();
+
+        $processedProducts = ProcessedProduct::factory()
+                                ->count(3)
+                                ->state(new Sequence(
+                                    ['transformed_data' => ['price' => 5.5]],
+                                    ['transformed_data' => ['price' => 5.0]],
+                                    ['transformed_data' => ['price' => 4.5]],
+                                ))
+                                ->make();
+
+        $service = new FilterService($compiler);
+
+        $filtered = $service->filter($processedProducts);
+
+        $this->assertTrue($filtered instanceof ProcessedProduct);
+        $this->assertEquals(4.5, $filtered->transformed_data['price']);
+    }
+
     /**
      * @test
      * @return void
