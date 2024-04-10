@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Jobs\SupplierPull;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,9 +12,12 @@ class Supplier extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['last_pulled_at', 'pull_interval'];
+
     protected static $configKeys = [
         'xmlns' => 'optional',
         'root_tag' => 'required',
+        'ean_path' => 'required',
         'product_tag' => 'required',
         'source_type' => 'required',
     ];
@@ -23,36 +26,27 @@ class Supplier extends Model
         'structure' => 'array',
         'config' => 'array',
         'credentials' => 'array',
+        'last_pulled_at' => 'datetime',
     ];
-
-    public function pull() : void
-    {
-        if (!$this->canPull()) return;
-
-        SupplierPull::dispatch($this);
-    }
 
     /**
      * Helpers
      *
      */
-    
 
-    protected function config(string $key) : string
+    public function config(string $key) : string
     {
         return $this->config[$key] ?? '';
     }
 
-    public function canPull() : bool
+    public function configSet(string $key, string $value) : void
     {
-        if (empty($this->uri)) return false;
-        if (!$this->configKeysSet()) return false;
-        if (!is_array($this->structure) || empty($this->structure)) return false;
-
-        return true;
+        $config = $this->config;
+        $config[$key] = $value;
+        $this->config = $config;
     }
 
-    protected function configKeysSet() : bool
+    public function configKeysSet() : bool
     {
         foreach (self::$configKeys as $key => $value) {
             if ($this->config($key) == '' && $value == 'required') return false;
@@ -83,10 +77,31 @@ class Supplier extends Model
     }
 
     /**
+     * Scopes
+     *
+     */
+
+    public function scopeOutdated(Builder $query)
+    {
+        return $query->where(function (Builder $query) {
+            $query->whereRaw('last_pulled_at < DATE_SUB(NOW(), INTERVAL `pull_interval` SECOND)')
+                  ->orWhere('last_pulled_at', null);
+        });
+    }
+
+    public function scopeActive(Builder $query)
+    {
+        return $query->where('pull_interval', '>', 0);
+    }
+     /**
      * Relationships
      *
      */
 
+    public function processors() : HasMany
+    {
+        return $this->hasMany(Processor::class);
+    }
 
     public function products() : HasMany
     {

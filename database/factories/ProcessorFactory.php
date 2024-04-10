@@ -22,13 +22,16 @@ class ProcessorFactory extends Factory
             'supplier_id' => Supplier::factory(),
             'compiler_id' => Compiler::factory(),
             'mappings' => function (array $attributes) {
-                return Compiler::find($attributes['compiler_id'])->fields;
+                $mappings = Compiler::find($attributes['compiler_id'])->fields;
+                $keys = array_keys($mappings);
+                return array_combine($keys, $keys);
             },
             'transformations' => function (array $attributes) {
                 $mappings = Compiler::find($attributes['compiler_id'])->fields;
                 $keys = array_keys($mappings);
                 return array_combine($keys, $keys);
             },
+            'enabled' => true,
         ];
     }
 
@@ -41,6 +44,12 @@ class ProcessorFactory extends Factory
     public function compiler(Compiler $compiler) {
         return $this->state(function ($attributes) use ($compiler) {
             return ['compiler_id' => $compiler];
+        });
+    }
+
+    public function disabled() {
+        return $this->state(function ($attributes) {
+            return ['enabled' => false];
         });
     }
 }

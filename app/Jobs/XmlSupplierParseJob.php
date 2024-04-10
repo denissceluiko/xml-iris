@@ -1,30 +1,89 @@
 <?php
 
-namespace App\Services\Supplier\Parsers;
+namespace App\Jobs;
 
+use App\Jobs\Product\UpsertJob;
 use App\Models\Supplier;
-use Illuminate\Support\Facades\Storage;
+use App\Services\Processor\ExtractorService;
+use App\Traits\ChonkMeter;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Sabre\Xml\Reader;
 use Sabre\Xml\Service;
+use XMLReader;
 
-class Xml extends Parser
+class XmlSupplierParseJob implements ShouldQueue
 {
-    protected Supplier $supplier;
-    protected string $namespace;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
-    public function __construct(Supplier $supplier)
+    protected Supplier $supplier;
+    protected string $path;
+    protected XMLReader $reader;
+
+    protected string $namespace;
+    protected array $elementMap;
+
+    /**
+     * Create a new job instance.
+     *
+     * @return void
+     */
+    public function __construct(Supplier $supplier, string $path)
     {
         $this->supplier = $supplier;
-        $this->namespace = $supplier->config['xmlns'] ?? '';
+        $this->path = $path;
+        $this->namespace = $supplier->config['namespace'] ?? '';
+        $this->onQueue('long-running-queue');
     }
 
-    public function parse(string $path) : array
+    /**
+     * Execute the job.
+     *
+     * @return void
+     */
+    public function handle()
+    {
+        $this->reader = new XMLReader();
+
+        if ($this->reader->open("file://{$this->path}") === false) {
+            $this->fail("Could not open file ({$this->path}) for Supplier: {$this->supplier->id}.");
+        }
+
+        while ($this->reader->read() && $this->reader->name != $this->supplier->config['root_tag']);
+
+        $this->elementMap = $this->generateElementMap();
+
+        // Skip all the gunk if there are any
+        while ($this->reader->name != $this->supplier->config['product_tag']) {
+            $this->reader->read();
+        }
+
+        do {
+            $parsed = $this->parse($this->reader->readOuterXml());
+
+            $ean = $this->getEAN($parsed);
+
+            if (!empty($ean)) {
+                UpsertJob::dispatch($this->supplier, $ean, $parsed);
+            }
+
+        } while ($this->reader->next($this->supplier->config['product_tag']));
+
+        $this->reader->close();
+    }
+
+    public function parse(string $xml) : array
     {
         $service = new Service();
-        $service->elementMap = $this->generateElementMap();
+        $service->elementMap = $this->elementMap;
 
-        $parsed = $service->parse(Storage::disk('import')->get($path));
-        return $this->getProductsList($parsed);
+        $xml = $this->enclose($xml);
+        $parsed = $service->parse($xml);
+        return $parsed[0];
     }
 
     protected function generateElementMap() : array
@@ -149,16 +208,19 @@ class Xml extends Parser
         return '{'.$this->namespace.'}'.$selector;
     }
 
-    /**
-     * Simplified extractor in case root tag is not the product container
-     *
-     * @param array $xmlArray
-     * @return array
-     */
-    protected function getProductsList(array &$xmlArray) : array
+    protected function getEAN(array $product) : ?string
     {
-        return  isset($xmlArray[$this->supplier->config['root_tag']])
-                    ? $xmlArray[$this->supplier->config['root_tag']]['value']
-                    : $xmlArray;
+        $extractor = new ExtractorService([
+            "ean" => $this->supplier->config('ean_path'),
+        ]);
+        $data = $extractor->extract($product);
+
+        return $data['ean'] ?? null;
+    }
+
+    protected function enclose(string $xml) : string
+    {
+        $tag = $this->supplier->config['root_tag'];
+        return "<{$tag}>".$xml."</{$tag}>";
     }
 }

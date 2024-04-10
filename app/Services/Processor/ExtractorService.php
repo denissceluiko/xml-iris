@@ -28,6 +28,8 @@ class ExtractorService
     {
         $path = explode('->', $rule);
 
+        if (empty($path[0])) return null;
+
         foreach($path as $instruction) {
             $tree = $this->execute($instruction, $tree);
         }
@@ -37,8 +39,10 @@ class ExtractorService
         return $tree['value'] ?? null;
     }
 
-    protected function execute($instruction, array $tree)
+    protected function execute($instruction, ?array $tree)
     {
+        if (!is_array($tree)) return null;
+        
         $field = null;
 
         if (strpos($instruction, 'where') === 0) {
@@ -82,7 +86,7 @@ class ExtractorService
 
         if ($this->isAttribute($instruction)) {
             [$attribute, $value] = explode('=', trim($instruction, '[]'));
-            return $this->whereAttribute($attribute, trim($value, '"'), $tree);
+            return $this->whereAttribute($attribute, trim($value, '"\' '), $tree);
         }
 
         return ['value' => null];
@@ -90,6 +94,8 @@ class ExtractorService
 
     protected function whereAttribute($attribute, $value, array $tree) : array
     {
+        if (!is_array($tree['value'])) return ['value' => null];
+
         foreach($tree['value'] as $element)
         {
             if (!$this->hasAttribute($attribute, $element)) continue;

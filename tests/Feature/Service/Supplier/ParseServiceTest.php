@@ -3,13 +3,14 @@
 namespace Tests\Feature\Service\Supplier;
 
 use App\Models\Supplier;
+use App\Services\Supplier\Parsers\XmlParser;
 use App\Services\Supplier\ParseService;
+use App\Traits\ProductToolkit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\CopyToImportDisk;
-use Tests\Traits\ProductToolkit;
 
 class ParseServiceTest extends TestCase
 {
@@ -31,6 +32,10 @@ class ParseServiceTest extends TestCase
     {
         $supplier = Supplier::factory()
                         ->uri('supplier_import_simple.xml')
+                        ->config([
+                            'root_tag' => 'products',
+                            'product_tag' => 'product',
+                        ])
                         ->structure([
                             "products" => [
                                 "type" => "repeatingElements",
@@ -52,14 +57,14 @@ class ParseServiceTest extends TestCase
                         ->create();
 
         $path = $this->copyToImport($supplier->uri);
-        $parsed = (new ParseService($supplier))->parse($path);
+        $parser = (new ParseService($supplier, $path))->getParser();
 
-        $this->assertTrue($this->isProductArray($parsed));
+        $this->assertTrue($parser instanceof XmlParser);
 
         Storage::disk('import')->delete($path);
     }
 
-        /**
+    /**
      * @test
      * @return void
      */
@@ -72,7 +77,7 @@ class ParseServiceTest extends TestCase
                         ])
                         ->structure([
                             "sku" => "sku",
-                            "gtin" => "gtin",
+                            "ean" => "gtin",
                             "price_lt" => "PRICE LT",
                             "price_after_discount_lt" => "Price LT after discount",
                             "price_lv" => "PRICE LV",
@@ -86,10 +91,9 @@ class ParseServiceTest extends TestCase
 
         $path = $this->copyToImport($supplier->uri);
 
-        $parsed = (new ParseService($supplier))->parse($path);
+        (new ParseService($supplier, $path))->getParser()->parse();
 
-        $this->assertCount(2, $parsed);
-        $this->assertTrue($this->isProductArray($parsed));
+        $this->assertDatabaseCount('products', 2);
 
         Storage::disk('import')->delete($path);
     }
@@ -98,20 +102,48 @@ class ParseServiceTest extends TestCase
      * @test
      * @return void
      */
+    public function can_parse_csv_file()
+    {
+        $supplier = Supplier::factory()
+                        ->uri('supplier_import_simple.csv')
+                        ->config([
+                            'source_type' => 'csv'
+                        ])
+                        ->structure([
+                            "sku" => "sku",
+                            "ean" => "gtin",
+                            "price_lt" => "PRICE LT",
+                            "price_after_discount_lt" => "Price LT after discount",
+                            "price_lv" => "PRICE LV",
+                            "price_after_discount_lv" => "Price LV after discount",
+                            "price_ee" => "PRICE EE",
+                            "price_after_discount_ee" => "Price EE after discount",
+                            "stock" => "stock",
+                            "delivery_hours" => "Delivery hours",
+                          ])
+                        ->create();
+
+        $path = $this->copyToImport($supplier->uri);
+
+        (new ParseService($supplier, $path))->getParser()->parse();
+
+        $this->assertDatabaseCount('products', 2);
+
+        Storage::disk('import')->delete($path);
+    }
+    /**
+     * @test
+     * @return void
+     */
     public function can_not_parse_random_extension_file()
     {
         $supplier = Supplier::factory()
-                        ->uri('this_file_dies_not_exist.yolo')
+                        ->uri('this_file_can_not_be_parsed.yolo')
                         ->structure([])
                         ->create();
 
-        $path = sha1(date('dmyHis-test'));
-        Storage::disk('import')->put($path, "just some random string");
+        $parser = (new ParseService($supplier, 'this_file_can_not_be_parsed.yolo'))->getParser();
 
-        $parsed = (new ParseService($supplier))->parse($path);
-
-        $this->assertEquals(null, $parsed);
-
-        Storage::disk('import')->delete($path);
+        $this->assertEquals(null, $parser);
     }
 }

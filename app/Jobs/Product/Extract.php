@@ -25,7 +25,7 @@ class Extract implements ShouldQueue
      */
     public function __construct(ProcessedProduct $product)
     {
-        $this->product = $product;
+        $this->product = $product->withoutRelations();
     }
 
     /**
@@ -39,8 +39,19 @@ class Extract implements ShouldQueue
 
         $extractor = new ExtractorService($this->product->processor->mappings);
 
-        $this->product->setStale("transformed")->update([
-            'extracted_data' => $extractor->extract($this->product->product->values),
-        ]);
+        $extractedData = $extractor->extract($this->product->product->values);
+
+        if (empty($extractedData)) {
+            $this->fail("Data extraction failed");
+            return;
+        }
+        
+        $this->product
+            ->setStale("transformed")
+            ->setMeta([
+                '__last_pulled_at' => $this->product->product->last_pulled_at,
+            ])->update([
+                'extracted_data' => $extractedData,
+            ]);
     }
 }

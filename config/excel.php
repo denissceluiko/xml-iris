@@ -228,7 +228,7 @@ return [
         | Drivers: memory|illuminate|batch
         |
         */
-        'driver'     => 'memory',
+        'driver'     => 'illuminate',
 
         /*
         |--------------------------------------------------------------------------
@@ -241,7 +241,7 @@ return [
         |
         */
         'batch'     => [
-            'memory_limit' => 60000,
+            'memory_limit' => 40000,
         ],
 
         /*
@@ -257,7 +257,7 @@ return [
         |
         */
         'illuminate' => [
-            'store' => null,
+            'store' => 'excel-cache',
         ],
     ],
 

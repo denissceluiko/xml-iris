@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\Code;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
@@ -52,7 +53,10 @@ class Product extends Resource
             Code::make(__('Values'), 'values')
                 ->json()
                 ->rules('json'),
-            DateTime::make(__('Updated at'), 'updated_at')->readonly(),
+            DateTime::make(__('Last pulled at'), 'last_pulled_at')->readonly()->hideFromIndex(),
+            Boolean::make(__('Active'), function() {
+                return $this->isActive();
+            }),
         ];
     }
 

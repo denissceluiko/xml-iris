@@ -79,6 +79,12 @@ return [
             'lock_connection' => 'default',
         ],
 
+        'excel-cache' => [
+            'driver' => 'redis',
+            'connection' => 'excel-cache',
+            'lock_connection' => 'default',
+        ],
+
         'dynamodb' => [
             'driver' => 'dynamodb',
             'key' => env('AWS_ACCESS_KEY_ID'),

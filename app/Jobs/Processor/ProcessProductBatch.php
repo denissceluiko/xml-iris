@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Processor;
 
 use App\Jobs\Product\Extract;
 use App\Jobs\Product\Transform;
 use App\Models\ProcessedProduct;
 use App\Models\Processor;
+use App\Traits\ChonkMeter;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,25 +17,25 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Bus;
 
-class ProcessProducts implements ShouldQueue
+class ProcessProductBatch implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ChonkMeter;
 
-    public Processor $processor;
-
-    public function middleware() : array
-    {
-        return [(new WithoutOverlapping($this->processor->id))->releaseAfter(60)->expireAfter(180)];
-    }
+    protected Processor $processor;
+    protected int $offset;
+    protected int $count;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(Processor $processor)
+    public function __construct(Processor $processor, int $offset, int $count)
     {
         $this->processor = $processor->withoutRelations();
+
+        $this->offset = $offset;
+        $this->count = $count;
     }
 
     /**
@@ -43,9 +45,13 @@ class ProcessProducts implements ShouldQueue
      */
     public function handle()
     {
-        $this->upsertMissing();
-
-        $products = $this->processor->processedProducts()->select(['id', 'stale_level'])->stale()->get();
+        $products = $this->processor
+                    ->processedProducts()
+                    ->select(['id', 'stale_level'])
+                    ->stale()
+                    ->limit($this->count)
+                    ->offset($this->offset)
+                    ->get();
 
         $batch = [];
 
@@ -58,20 +64,10 @@ class ProcessProducts implements ShouldQueue
             }
         }
 
-        Bus::batch($batch)->dispatch();
-    }
-
-    public function upsertMissing()
-    {
-        $products = $this->processor->supplier->products()->select('id')->get();
-
-        $processorId = $this->processor->id;
-
-        $upserts = $products->map(function ($product) use ($processorId) {
-            return ['product_id' => $product->id, 'processor_id' => $processorId];
-        });
-
-        ProcessedProduct::upsert($upserts->toArray(), ['product_id', 'processor_id']);
+        Bus::batch($batch)
+            ->name('Product processor batch')
+            ->allowFailures()
+            ->dispatch();
     }
 
     public function transform(ProcessedProduct $product) : Transform

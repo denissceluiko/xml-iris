@@ -2,10 +2,12 @@
 
 namespace App\Nova\Actions;
 
+use App\Jobs\SupplierPull as JobsSupplierPull;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Bus;
 use Laravel\Nova\Actions\Action;
 use Laravel\Nova\Actions\Actionable;
 use Laravel\Nova\Fields\ActionFields;
@@ -23,9 +25,16 @@ class SupplierPull extends Action
      */
     public function handle(ActionFields $fields, Collection $models)
     {
+        $batch = [];
+
         foreach ($models as $supplier) {
-            $supplier->pull();
+            $batch[] = new JobsSupplierPull($supplier);
         }
+
+        Bus::batch($batch)
+            ->name('Manual Supplier pull')
+            ->onQueue('long-running-queue')
+            ->dispatch();
     }
 
     /**

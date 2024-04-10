@@ -44,6 +44,88 @@ class ExtractorServiceTest extends TestCase
         ], $extracted);
     }
 
+    /**
+     * @test
+     * @return void
+     */
+    public function can_handle_empty_values()
+    {
+        $extractor = new ExtractorService([
+            'ean' => 'ean',
+            'sku' => '[id]',
+            'eantype' => '',
+        ]);
+
+        $extracted = $extractor->extract([
+            "name" => "{}product",
+            "value" => [
+              [
+                "name" => "{}ean",
+                "value" => "1010110101010",
+                "attributes" => [
+                    "type" => "ean13"
+                ],
+              ],
+            ],
+            "attributes" => [
+              "id" => "101010",
+            ],
+        ]);
+
+
+        $this->assertEquals([
+            'ean' => '1010110101010',
+            'sku' => '101010',
+            'eantype' => ''
+        ], $extracted);
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_fail_lookup_gracefully()
+    {
+        $extractor = new ExtractorService([
+            'ean' => '[id]',
+            'usd' => 'price->where(null)->value', // Empty where
+            'jpy' => 'price->where([currency="JPY"])->[value]', // Non-existent where() result
+            'eur' => 'price->where([currency="EUR"])->[no_attribute]', // Non-existent atribute after where()
+            'sum' => 'price->where([currency="EUR"])->[value]', // Valid lookup
+        ]);
+
+        $extracted = $extractor->extract([
+            "name" => "{}product",
+            "value" => [
+                [
+                    "name" => "{}price",
+                    "value" => [
+                      [
+                        "name" => "{}price_netto",
+                        "value" => null,
+                        "attributes" => [
+                          "currency" => "EUR",
+                          "value" => "1.04",
+                        ],
+                      ],
+                    ],
+                    "attributes" => [],
+                ],
+            ],
+            "attributes" => [
+              "id" => "101010",
+            ],
+        ]);
+
+
+        $this->assertEquals([
+            'ean' => '101010',
+            'jpy' => null,
+            'eur' => null,
+            'usd' => null,
+            'sum' => 1.04,
+        ], $extracted);
+    }
 
     /**
      * @test

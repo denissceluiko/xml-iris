@@ -3,12 +3,13 @@
 namespace App\Services\Supplier\Parsers;
 
 use App\Models\Supplier;
+use Illuminate\Foundation\Bus\PendingDispatch;
 
 abstract class Parser
 {
     protected Supplier $supplier;
 
-    abstract protected function __construct(Supplier $supplier);
+    abstract public function __construct(Supplier $supplier, string $path);
 
-    abstract protected function parse(string $path) : array;
+    abstract public function parse() : PendingDispatch;
 }

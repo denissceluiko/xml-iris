@@ -1,16 +1,18 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Jobs\Supplier;
 
+use App\Jobs\Supplier\ParseJob;
 use App\Jobs\SupplierPull;
 use App\Models\Supplier;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
-class SupplierTest extends TestCase
+class SupplierPullJobTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -25,17 +27,21 @@ class SupplierTest extends TestCase
      * @test
      * @return boolean
      */
-    public function can_dispatch_pull_job()
+    public function can_dispatch_parse_job()
     {
         Bus::fake();
 
         $supplier = Supplier::factory()
-                        ->uri(Storage::path('supplier_import_simple.xml'))
+                        ->uri('supplier_import_simple.xml')
                         ->create();
-        $supplier->pull();
 
-        Bus::assertDispatched(SupplierPull::class);
+        [$job, $batch] = (new SupplierPull($supplier))->withFakeBatch();
+        $job->handle();
 
+        Bus::assertDispatched(ParseJob::class);
+        $this->assertDatabaseHas('suppliers', [
+            'last_pulled_at' => Carbon::now(),
+        ]);
     }
 
     /**
@@ -44,16 +50,13 @@ class SupplierTest extends TestCase
      */
     public function will_not_dispatch_pull_job_when_uri_not_configured()
     {
-        Bus::fake();
-
         // `uri` is not nullable in the DB but also can't fail empty() check
         $supplier = Supplier::factory()
                         ->uri('')
                         ->create();
 
-        $supplier->pull();
-
-        Bus::assertNotDispatched(SupplierPull::class);
+        $job = new SupplierPull($supplier);
+        $this->assertFalse($job->canPull());
     }
 
     /**
@@ -62,17 +65,13 @@ class SupplierTest extends TestCase
      */
     public function will_not_dispatch_pull_job_when_config_not_configured()
     {
-        Bus::fake();
-
-        // `uri` is not nullable in the DB but also can't fail empty() check
         $supplier = Supplier::factory()
-                        ->uri(Storage::path('supplier_import_simple.xml'))
+                        ->uri('supplier_import_simple.xml')
                         ->config([])
                         ->create();
 
-        $supplier->pull();
-
-        Bus::assertNotDispatched(SupplierPull::class);
+        $job = new SupplierPull($supplier);
+        $this->assertFalse($job->canPull());
     }
 
     /**
@@ -81,20 +80,16 @@ class SupplierTest extends TestCase
      */
     public function will_not_dispatch_pull_job_when_config_not_fully_configured()
     {
-        Bus::fake();
-
-        // `uri` is not nullable in the DB but also can't fail empty() check
         $supplier = Supplier::factory()
-                        ->uri(Storage::path('supplier_import_simple.xml'))
+                        ->uri('supplier_import_simple.xml')
                         ->config([
                             'product_tag' => 'product',
                             'source_type' => 'xml',
                         ])
                         ->create();
 
-        $supplier->pull();
-
-        Bus::assertNotDispatched(SupplierPull::class);
+        $job = new SupplierPull($supplier);
+        $this->assertFalse($job->canPull());
     }
 
     /**
@@ -103,11 +98,8 @@ class SupplierTest extends TestCase
      */
     public function will_not_dispatch_pull_job_when_structure_not_configured()
     {
-        Bus::fake();
-
-        // `uri` is not nullable in the DB but also can't fail empty() check
         $supplier = Supplier::factory()
-                        ->uri(Storage::path('supplier_import_simple.xml'))
+                        ->uri('supplier_import_simple.xml')
                         ->config([
                             'root_tag' => 'products',
                             'product_tag' => 'product',
@@ -116,8 +108,28 @@ class SupplierTest extends TestCase
                         ->structure([])
                         ->create();
 
-        $supplier->pull();
+        $job = new SupplierPull($supplier);
+        $this->assertFalse($job->canPull());
+    }
 
-        Bus::assertNotDispatched(SupplierPull::class);
+    /**
+     * @test
+     * @return boolean
+     */
+    public function will_fail_if_pull_failed()
+    {
+        Bus::fake();
+        Http::fake([
+            'example.com/503_response.xml' => Http::response("Service unavailable", 503),
+        ]);
+
+        $supplier = Supplier::factory()
+                        ->uri('https://example.com/503_response.xml')
+                        ->create();
+
+        [$job, $batch] = (new SupplierPull($supplier))->withFakeBatch();
+        $job->handle();
+
+        Bus::assertNotDispatched(ParseJob::class);
     }
 }

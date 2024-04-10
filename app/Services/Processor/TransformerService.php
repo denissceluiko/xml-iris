@@ -2,10 +2,13 @@
 
 namespace App\Services\Processor;
 
+use Carbon\Carbon;
 use FormulaParser\FormulaParser;
 
 class TransformerService
 {
+
+    protected static array $availableFunctions = ['age'];
 
     protected array $transformations;   // From Processor
     protected array $types;             // From Compiler
@@ -50,21 +53,22 @@ class TransformerService
     }
 
     /**
-     * Replaces transformations' names within a rule with theri values
+     * Replaces transformations' names within a rule with their values
      * E.g.
      * $transformations = ["ean" => "ean", "sku" => "sku", "extra" => "ean sku"]
      * $data = ["ean" => "101010101", "sku" => "20202"]
      * result would be ["ean" => "101010101", "sku" => "20202", "extra" => "101010101 20202"]
-     *
-     * @param [type] $rule
-     * @return void
      */
-    public function insertValues($rule)
+    public function insertValues(string $rule) : string
     {
         foreach ($this->transformations as $name => $value) {
-            if (empty($this->data[$name])) continue;
-            $rule = str_replace($name, $this->data[$name], $rule);
+            if (!array_key_exists($name, $this->data)) continue;
+
+            $replacement = $this->data[$name] ?? 0;
+            $rule = str_replace($name, $replacement, $rule);
         }
+
+        $rule = $this->evaluateFunctions($rule);
 
         return $rule;
     }
@@ -76,7 +80,10 @@ class TransformerService
                 $rule = intval($rule);
                 break;
             case 'float':
-                $rule = floatval($rule);
+                $rule = round(floatval($rule), 2);
+                break;
+            case 'string':
+                $rule = strval($rule);
                 break;
         }
 
@@ -115,7 +122,7 @@ class TransformerService
     public function resolveExpression(string|array $rule) : string
     {
         if (is_string($rule)) {
-            $data = json_decode($rule);
+            $data = json_decode($rule, true);
         } else {
             $data = $rule;
         }
@@ -130,7 +137,35 @@ class TransformerService
             return $this->isExpression($data[3]) ? $this->resolveExpression($data[3]) : $data[3];
         }
 
-
         return $this->isExpression($data[4]) ? $this->resolveExpression($data[4]) : $data[4];
+    }
+
+    public function evaluateFunctions(string $rule) : string
+    {
+        foreach (self::$availableFunctions as $candidate)
+        {
+            $rule = $this->evaluateFunction($candidate, $rule);
+        }
+
+        return $rule;
+    }
+
+    public function evaluateFunction(string $candidate, string $rule) : string
+    {
+        while (preg_match("/$candidate\((.*)\)/", $rule, $matches) === 1)
+        {
+            $function = 'function'.ucfirst($candidate);
+            $result = $this->$function($matches[1]);
+            $rule = str_replace($matches[0], $result, $rule);
+        }
+
+        return $rule;
+    }
+
+    public function functionAge(string $args = null) : string
+    {
+        if (!isset($this->data['__last_pulled_at'])) return '0';
+
+        return Carbon::now()->diffInSeconds(new Carbon($this->data['__last_pulled_at']));
     }
 }

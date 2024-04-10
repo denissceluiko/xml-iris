@@ -2,11 +2,16 @@
 
 namespace App\Nova;
 
+use App\Nova\Actions\CompileProducts;
+use App\Nova\Actions\CompileProductsFull;
+use App\Nova\Metrics\CompiledProducts;
+use App\Nova\Metrics\ProductsBySource;
+use App\Nova\Metrics\StaleProductsByProcessor;
 use Illuminate\Http\Request;
-use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
+use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
 
 class Compiler extends Resource
@@ -48,7 +53,17 @@ class Compiler extends Resource
             KeyValue::make(__('Fields'), 'fields')->default([
                 'ean' => 'string'
             ])->keyLabel(__('Field'))->valueLabel(__('Type')),
+            Text::make(__('Rules'), 'rules')->hideFromIndex(),
+            Number::make(__('Compilation interval'), 'interval')
+                ->hideFromIndex()
+                ->min(0)
+                ->max(86400)
+                ->step(1)
+                ->help(__('Time in seconds. 0 = inactive.'))
+                ->rules('required'),
             HasMany::make(__('Processors')),
+            HasMany::make(__('Exports'), 'exports'),
+            HasMany::make(__('Compiled products'), 'compiledProducts'),
         ];
     }
 
@@ -60,7 +75,11 @@ class Compiler extends Resource
      */
     public function cards(Request $request)
     {
-        return [];
+        return [
+            (new CompiledProducts)->onlyOnDetail(),
+            (new ProductsBySource)->onlyOnDetail(),
+            (new StaleProductsByProcessor)->onlyOnDetail(),
+        ];
     }
 
     /**
@@ -93,6 +112,9 @@ class Compiler extends Resource
      */
     public function actions(Request $request)
     {
-        return [];
+        return [
+            CompileProducts::make(),
+            CompileProductsFull::make(),
+        ];
     }
 }

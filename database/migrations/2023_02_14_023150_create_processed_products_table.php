@@ -17,13 +17,14 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('processor_id');
+            $table->string('ean')->index();
             $table->json('extracted_data')->nullable();
             $table->json('transformed_data')->nullable();
             // 0 - not stale; 1 - transformed data is stale; 2 - extracted data is stale
             $table->tinyInteger('stale_level')->default(2);
             $table->timestamps();
 
-            $table->unique(['product_id', 'processor_id']);
+            $table->unique(['product_id', 'processor_id', 'ean']);
         });
     }
 

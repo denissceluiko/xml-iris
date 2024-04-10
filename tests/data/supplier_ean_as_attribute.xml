@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<offer xmlns:iaiext="http://example.com/extensions.phtml">
+    <products>
+        <product id="420">
+            <sizes>
+                <size id="0" producer_code="0000000000000"  iaiext:code_external="Product Name" weight="50">
+                    <stock id="1" quantity="42"/>
+                </size>
+            </sizes>
+        </product>
+    </products>
+</offer>

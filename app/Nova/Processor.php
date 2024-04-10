@@ -6,6 +6,7 @@ use App\Nova\Actions\ProcessProducts;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
@@ -49,6 +50,7 @@ class Processor extends Resource
             ID::make(),
             BelongsTo::make('Compiler'),
             BelongsTo::make('Supplier'),
+            Boolean::make(__('Enabled'), 'enabled'),
             KeyValue::make(__('Mappings'), 'mappings')
                 ->keyLabel(__('Field'))
                 ->valueLabel(__('Product value path')),
@@ -77,11 +79,12 @@ class Processor extends Resource
             })
             ->keyLabel(__('Field'))
             ->valueLabel(__('Product value path')),
-        KeyValue::make(__('Transformations'), 'transformations', function() {
+            KeyValue::make(__('Transformations'), 'transformations', function() {
                 return $this->fillTransformations();
             })
             ->keyLabel(__('Field'))
             ->valueLabel(__('Transformation')),
+            Boolean::make(__('Enabled'), 'enabled'),
         ];
     }
 

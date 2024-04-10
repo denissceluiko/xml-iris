@@ -5,6 +5,7 @@ namespace App\Nova;
 use App\Models\ProcessedProduct as ModelsProcessedProduct;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\KeyValue;
 use Laravel\Nova\Fields\Text;
@@ -32,7 +33,7 @@ class ProcessedProduct extends Resource
      * @var array
      */
     public static $search = [
-        'id',
+        'id', 'ean'
     ];
 
     public static $displayInNavigation = false;
@@ -49,12 +50,14 @@ class ProcessedProduct extends Resource
             ID::make(__('ID'), 'id')->sortable(),
             BelongsTo::make(__('Product'), 'product'),
             BelongsTo::make(__('Processor'), 'processor'),
+            Text::make(__('EAN'), 'ean')->readonly(),
             Text::make(__('Staleness'), function() {
                 return ModelsProcessedProduct::$staleness[$this->stale_level];
             }),
 
             KeyValue::make(__('Extracted data'), 'extracted_data'),
             KeyValue::make(__('Transformed data'), 'transformed_data'),
+            DateTime::make(__('Updated at'), 'updated_at')->readonly()->showOnDetail(),
         ];
     }
 
