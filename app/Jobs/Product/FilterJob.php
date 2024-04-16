@@ -55,13 +55,32 @@ class FilterJob implements ShouldQueue
         $filtered = (new FilterService($this->compiler))->filter($products);
 
         if (empty($filtered)) {
-            $this->fail("Filtered empty, Compiler: {$this->compiler->id}; EAN: {$this->ean}");
-        }
+            Log::info("Filtered empty, Compiler: {$this->compiler->id}; EAN: {$this->ean}");
 
-        $this->compiler->compiledProducts()->ean($this->ean)->update([
-            'processed_product_id' => $filtered->id,
-            'data' => $filtered->transformed_data,
-            'stale_level' => 0,
-        ]);
+            // Delete
+            $this->compiler
+                ->compiledProducts()
+                ->ean($this->ean)
+                ->where('stale_level', -1)
+                ->delete();
+
+            // Mark for deletion on next run
+            $this->compiler
+                ->compiledProducts()
+                ->ean($this->ean)
+                ->stale(-1)
+                ->update([
+                    'processed_product_id' => null,
+                    'data->stock' => 0, // Fix this!
+                    'stale_level' => -1,
+                ]);
+
+        } else {
+            $this->compiler->compiledProducts()->ean($this->ean)->update([
+                'processed_product_id' => $filtered->id,
+                'data' => $filtered->transformed_data,
+                'stale_level' => 0,
+            ]);
+        }
     }
 }

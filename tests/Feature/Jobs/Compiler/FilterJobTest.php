@@ -85,4 +85,139 @@ class FilterJobTest extends TestCase
             'price' => 4.50,
         ], $compiled->data);
     }
+
+    /**
+     * @test
+     */
+    public function will_set_stock_to_zero_if_filtered_is_empty()
+    {
+
+        $ean = '9116963990362';
+        $compiler = Compiler::factory()
+            ->fields([
+                'ean' => 'ean',
+                'name' => 'string',
+                'stock' => 'int',
+            ])
+            ->rules('order("stock", "desc")')
+            ->has(Processor::factory()
+                ->has(ProcessedProduct::factory()
+                    ->state([
+                        'ean' => $ean,
+                        'transformed_data' => [
+                            'ean' => $ean,
+                            'name' => 'fake product 3',
+                            'stock' => 3,
+                        ]
+                    ])
+                )
+            )
+            ->create();
+
+        $compiler->upsertMissing($compiler->processedProducts()->get());
+
+        Bus::fake();
+
+        [$job, $batch] = (new FilterJob($compiler, $ean))->withFakeBatch();
+        $job->handle();
+
+        $compiler->processors()->update([
+            'enabled' => 0,
+        ]);
+
+        [$job, $batch] = (new FilterJob($compiler, $ean))->withFakeBatch();
+        $job->handle();
+
+        $this->assertDatabaseHas('compiled_products', [
+                'ean' => $ean,
+                'data->ean' => $ean,
+                'data->stock' => 0,
+                'stale_level' => -1,
+        ]);
+    }
+
+
+    /**
+     * @test
+     */
+    public function will_delete_nonexistent_products()
+    {
+
+        $ean = '9116963990362';
+        $ean2 = '9116963990363';
+        $compiler = Compiler::factory()
+            ->fields([
+                'ean' => 'ean',
+                'name' => 'string',
+                'stock' => 'int',
+            ])
+            ->rules('order("stock", "desc")')
+            ->has(Processor::factory()
+                ->has(ProcessedProduct::factory()
+                    ->state([
+                        'ean' => $ean,
+                        'transformed_data' => [
+                            'ean' => $ean,
+                            'name' => 'fake product 3',
+                            'stock' => 3,
+                        ]
+                    ])
+                )
+            )
+            ->create();
+
+        $processor2 = Processor::factory()
+            ->for($compiler)
+            ->has(ProcessedProduct::factory()
+                ->state([
+                    'ean' => $ean2,
+                    'transformed_data' => [
+                        'ean' => $ean2,
+                        'name' => 'fake product 5',
+                        'stock' => 6,
+                    ]
+                ])
+            )->create();
+
+        $compiler->upsertMissing($compiler->processedProducts()->get());
+
+        Bus::fake();
+
+        [$job, $batch] = (new FilterJob($compiler, $ean))->withFakeBatch();
+        $job->handle();
+
+        [$job2, $batch] = (new FilterJob($compiler, $ean2))->withFakeBatch();
+        $job2->handle();
+
+        $compiler->processors()
+            ->whereNot('id', $processor2->id)
+            ->update([
+                'enabled' => -1,
+            ]);
+
+        $compiler->compiledProducts()->update([
+            'stale_level' => -1,
+        ]);
+
+        [$job, $batch] = (new FilterJob($compiler, $ean))->withFakeBatch();
+        $job->handle();
+
+        [$job2, $batch] = (new FilterJob($compiler, $ean2))->withFakeBatch();
+        $job2->handle();
+
+        // Will not delete other things
+        $this->assertDatabaseHas('compiled_products', [
+            'ean' => $ean2,
+            'data->ean' => $ean2,
+            'data->stock' => 6,
+            'stale_level' => 0,
+        ]);
+
+        $this->assertDatabaseMissing('compiled_products', [
+            'ean' => $ean,
+            'data->ean' => $ean,
+            'data->stock' => 0,
+            'stale_level' => -1,
+        ]);
+    }
 }
