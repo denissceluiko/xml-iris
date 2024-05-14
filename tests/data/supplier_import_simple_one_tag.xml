@@ -1,0 +1,3 @@
+<PriceList xmlns:sql="urn:schemas-microsoft-com:xml-sql">
+<Product Manuf="ABC" Price="123.00" Stock="5" Ean="731304016359" />
+</PriceList>

@@ -105,6 +105,63 @@ class XmlSupplierParserJobTest extends TestCase
     }
 
     /**
+     * A basic supplier parse test.
+     *
+     * @test
+     * @return void
+     */
+    public function can_parse_simple_supplier_with_one_tag_products()
+    {
+        $supplier = Supplier::factory()
+                        ->uri('supplier_import_simple_one_tag.xml')
+                        ->config([
+                            'root_tag' => 'PriceList',
+                            'product_tag' => 'Product',
+                            'source_type' => 'xml',
+                            'ean_path' => '[Ean]',
+                        ])
+                        ->structure([
+                            "PriceList" => [
+                                "type" => "repeatingElements",
+                                "child" => "Product",
+                                "value" => [
+                                    "Product" => [
+                                        "type" => "keyValue",
+                                        "value" => null,
+                                        "attributes" => [
+                                            "Ean" => "ean",
+                                            "Price" => "float",
+                                            "Currency" => "currency",
+                                            "Stock" => "int",
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ])
+                        ->create();
+
+        $expected =
+        [
+            "name" => "{}Product",
+            "value" => [],
+            "attributes" => [
+                "Ean" => "731304016359",
+                "Price" => "123.00",
+                "Stock" => "5",
+            ],
+        ];
+
+        Bus::fake();
+
+        $parser = new XmlSupplierParseJob($supplier, Storage::path($supplier->uri));
+
+        $parser->handle();
+
+        Bus::assertDispatched(function (UpsertJob $job) use ($expected) {
+            return $job->ean === "0000000000000" && $job->values = $expected;
+        });
+    }
+    /**
      * @test
      *
      * @return void
