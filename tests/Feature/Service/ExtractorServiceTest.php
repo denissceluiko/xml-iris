@@ -189,7 +189,9 @@ class ExtractorServiceTest extends TestCase
     {
         $extractor = new ExtractorService([
             'sku' => '[id]',
-            'price' => 'cena->where([waluta="EUR"])->[wartosc]',
+            'price_1' => 'cena->where([waluta="EUR"])->[wartosc]',
+            'price_2' => 'cena->where("cena_netto")->where([waluta="USD"])->[wartosc]',
+            'price_3' => 'cena->where([waluta="EUR"])->where("cena_netto")->[wartosc]',
         ]);
 
         $extracted = $extractor->extract([
@@ -199,11 +201,11 @@ class ExtractorServiceTest extends TestCase
                     "name" => "{}cena",
                     "value" => [
                       [
-                        "name" => "{}cena_netto",
+                        "name" => "{}cena_brutto",
                         "value" => null,
                         "attributes" => [
-                          "waluta" => "USD",
-                          "wartosc" => "1.04",
+                          "waluta" => "EUR",
+                          "wartosc" => "0.96",
                         ],
                       ],
                       [
@@ -212,6 +214,14 @@ class ExtractorServiceTest extends TestCase
                         "attributes" => [
                           "waluta" => "EUR",
                           "wartosc" => "0.94",
+                        ],
+                      ],
+                      [
+                        "name" => "{}cena_netto",
+                        "value" => null,
+                        "attributes" => [
+                          "waluta" => "USD",
+                          "wartosc" => "1.04",
                         ],
                       ],
                     ],
@@ -226,7 +236,9 @@ class ExtractorServiceTest extends TestCase
 
         $this->assertEquals([
             'sku' => '101010',
-            'price' => '0.94',
+            'price_1' => '0.96',
+            'price_2' => '1.04',
+            'price_3' => '0.94',
         ], $extracted);
     }
 
