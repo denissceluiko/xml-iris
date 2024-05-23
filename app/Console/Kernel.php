@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Jobs\ExportCycle;
 use App\Jobs\Maintenance\ProcessForgottenStaleProducts;
 use App\Jobs\Maintenance\PurgeAbandonedProducts;
+use App\Jobs\Maintenance\PurgeOldImportFiles;
 use App\Jobs\UpdateCycle;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -31,6 +32,9 @@ class Kernel extends ConsoleKernel
                 ->everyThreeHours();
 
         $schedule->job(new ProcessForgottenStaleProducts)
+                ->hourly();
+
+        $schedule->job(new PurgeOldImportFiles)
                 ->hourly();
 
         $schedule->command('horizon:snapshot')->everyFiveMinutes();
