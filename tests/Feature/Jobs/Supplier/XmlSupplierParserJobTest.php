@@ -158,7 +158,10 @@ class XmlSupplierParserJobTest extends TestCase
         $parser->handle();
 
         Bus::assertDispatched(function (UpsertJob $job) use ($expected) {
-            return $job->ean === "0000000000000" && $job->values = $expected;
+            return $job->ean === "0000000000001" && $job->values = $expected;
+        });
+        Bus::assertDispatched(function (UpsertJob $job) use ($expected) {
+            return $job->ean === "0000000000002" && $job->values = $expected;
         });
     }
     /**
