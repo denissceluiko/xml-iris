@@ -42,18 +42,18 @@ class ExtractorService
     protected function execute($instruction, ?array $tree)
     {
         if (!is_array($tree)) return null;
-        
-        $field = null;
+
+        $branch = null;
 
         if (strpos($instruction, 'where') === 0) {
-            $field = $this->where($instruction, $tree)['value'];
+            $branch = $this->where($instruction, $tree);
         } else if ($this->isAttribute($instruction)) {
-            $field = $this->extractAttribute($instruction, $tree);
+            $branch = $this->extractAttribute($instruction, $tree);
         } else {
-            $field = $this->findByName($instruction, $tree['value']);
+            $branch = $this->firstByName($instruction, $tree);
         }
 
-        return $field;
+        return $branch;
     }
 
     protected function isAttribute($instruction) : bool
@@ -62,49 +62,79 @@ class ExtractorService
                $instruction[strlen($instruction) - 1] == ']';
     }
 
-    protected function findByName($name, array $tree) : array
+    protected function firstByName($name, ?array $tree) : ?array
     {
-        foreach ($tree as $element) {
-            if ($element['name'] == '{}'.$name) {
-                return $element;
-            }
-        }
+        if (empty($tree['value'])) return null;
 
-        return ['value' => null];
+        $results = $this->whereTag($name, $this->stripNode($tree));
+        return isset($results[0]) ? $results[0] : null;
     }
 
     protected function extractAttribute($name, array $element) : array
     {
+        // If element is an array of nodes let's take the first
+        if (!empty($element) && !$this->isNode($element)) {
+            $element = $element[0];
+        }
+
         if (empty($element['attributes'])) return ['value' => null];
         $name = trim($name, "[]");
         return ['value' => $element['attributes'][$name] ?? null];
     }
 
-    protected function where($instruction, array $tree) : array
+    protected function where($instruction, array $tree) : ?array
     {
         $instruction = $this->stripFunction($instruction);
+
+        // Normalize so $tree is just an array of nodes.
+        $tree = $this->stripNode($tree);
+
+        if (is_null($tree)) {
+            return null;
+        }
 
         if ($this->isAttribute($instruction)) {
             [$attribute, $value] = explode('=', trim($instruction, '[]'));
             return $this->whereAttribute($attribute, trim($value, '"\' '), $tree);
+        } elseif (true) {
+            $tag = trim($instruction, '"');
+            return $this->whereTag($tag, $tree);
         }
 
-        return ['value' => null];
+        return null;
     }
 
-    protected function whereAttribute($attribute, $value, array $tree) : array
+    protected function whereAttribute($attribute, $value, array $tree) : ?array
     {
-        if (!is_array($tree['value'])) return ['value' => null];
+        if (empty($tree)) return null;
 
-        foreach($tree['value'] as $element)
+        $filtered = [];
+
+        foreach($tree as $element)
         {
             if (!$this->hasAttribute($attribute, $element)) continue;
             if ($element['attributes'][$attribute] != $value) continue;
 
-            return ['value' => $element];
+            $filtered[] = $element;
         }
 
-        return ['value' => null];
+        return $filtered;
+    }
+
+    protected function whereTag($tag, array $tree) : ?array
+    {
+        if (empty($tree)) return null;
+
+        $filtered = [];
+
+        foreach ($tree as $element) {
+            if(is_string($element)) dd($tree, $element, $tag);
+            if ($element['name'] == '{}'.$tag) {
+                $filtered[] = $element;
+            }
+        }
+
+        return $filtered;
     }
 
     protected function stripFunction(string $instruction)
@@ -115,5 +145,19 @@ class ExtractorService
     protected function hasAttribute(string $attribute, array $element)
     {
         return array_key_exists($attribute, $element['attributes']);
+    }
+
+    protected function isNode(array $tree) : bool
+    {
+        return isset($tree['name']) &&
+               (
+                isset($tree['value']) ||
+                isset($tree['attributes'])
+               );
+    }
+
+    protected function stripNode(array $tree) : ?array
+    {
+        return $this->isNode($tree) ? $tree['value'] : $tree;
     }
 }

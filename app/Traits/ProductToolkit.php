@@ -15,7 +15,11 @@ trait ProductToolkit
 
         if (!isset($product['name']) || strpos($product['name'], '{}') !== 0) return false;
         if (!isset($product['attributes']) || !is_array($product['attributes'])) return false;
-        if (!isset($product['value']) || !is_array($product['value'])) return false;
+        if (!array_key_exists('value', $product) ||
+            (
+                !is_array($product['value']) && !is_null($product['value'])
+            )
+        ) return false;
 
         return true;
     }

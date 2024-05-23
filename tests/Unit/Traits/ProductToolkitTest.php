@@ -68,7 +68,7 @@ class ProductToolkitTest extends TestCase
      * @test
      * @return void
      */
-    public function can_fail_value_not_being_an_array()
+    public function can_fail_value_not_being_an_array_or_null()
     {
         $trait = new class {
             use ProductToolkit;
@@ -78,6 +78,44 @@ class ProductToolkitTest extends TestCase
             'name' => '{}name',
             'value' => '',
             'attributes' => [],
+        ];
+
+        $this->assertFalse($trait->isProduct($product));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_have_value_as_null()
+    {
+        $trait = new class {
+            use ProductToolkit;
+        };
+
+        $product = [
+            'name' => '{}name',
+            'value' => null,
+            'attributes' => [],
+        ];
+
+        $this->assertTrue($trait->isProduct($product));
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function can_fail_value_as_null_attributes_as_not_array()
+    {
+        $trait = new class {
+            use ProductToolkit;
+        };
+
+        $product = [
+            'name' => '{}name',
+            'value' => null,
+            'attributes' => '',
         ];
 
         $this->assertFalse($trait->isProduct($product));
